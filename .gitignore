@@ -1,0 +1,52 @@
+###################################################
+# 1. Monorepo Specific (PNPM)
+###################################################
+
+# Node modules
+node_modules/
+.pnpm-store/
+
+# PNPM lockfile
+pnpm-lock.yaml
+
+# PNPM internal files
+.pnpm/
+
+# Build artifacts for all packages
+dist/
+build/
+coverage/
+
+###################################################
+# 2. General Node/TS Files
+###################################################
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# TypeScript cache
+*.tsbuildinfo
+
+###################################################
+# 3. IDE / Editor Files (WebStorm/VSCode)
+###################################################
+
+# WebStorm / IntelliJ files
+.idea/
+
+# VS Code files
+.vscode/
+
+# Editor config files
+.DS_Store
+
+###################################################
+# 4. Environment Variables
+###################################################
+
+# Environment variables files (always ignore these!)
+.env
+.env.local
+.env.*.local

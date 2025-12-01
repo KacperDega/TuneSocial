@@ -10,17 +10,15 @@ This repository is structured as a **Monorepo** managed using **pnpm Workspaces*
 
 | Area | Package | Technology | Description |
 | :--- | :--- | :--- | :--- |
-| **Backend** | `backend/api` | **NestJS**, TypeScript | REST API built on Node.js, providing core application logic and data access. |
-| **Frontend** | `frontend/app` | **React**, **Vite**, TypeScript | Single Page Application (SPA) for the user interface. |
+| **Backend** | `backend` | **NestJS**, TypeScript | REST API built on Node.js, providing core application logic and data access. |
+| **Frontend** | `frontend` | **React**, **Vite**, TypeScript | Single Page Application (SPA) for the user interface. |
 | **Shared** | `shared/types` | TypeScript | Contains common interfaces, DTOs (Data Transfer Objects), and utility types used across all packages. |
 
 ## 📦 Monorepo Structure
 ```
 .
-├── backend/
-│   └── api/            # NestJS API package (e.g., @project/api)
-├── frontend/
-│   └── app/            # React/Vite UI package (e.g., @project/frontend)
+├── backend/            # NestJS API package (e.g., @project/api)
+├── frontend/           # React/Vite UI package (e.g., @project/frontend)
 ├── shared/
 │   └── types/          # Shared TypeScript types package (e.g., @project/types)
 ├── package.json        # Root workspace configuration

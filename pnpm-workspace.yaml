@@ -1,9 +1,0 @@
-packages:
-  - backend
-  - frontend
-  - shared/*
-
-onlyBuiltDependencies:
-  - '@nestjs/core'
-  - esbuild
-  - unrs-resolver

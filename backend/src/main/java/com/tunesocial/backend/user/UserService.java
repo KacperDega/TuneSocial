@@ -13,7 +13,7 @@ import java.util.List;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private final PasswordEncoder passwordEncoder;
 
     public User create(CreateUserRequest req) {
         User user = new User();

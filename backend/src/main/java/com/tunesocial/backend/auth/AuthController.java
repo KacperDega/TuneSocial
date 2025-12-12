@@ -2,9 +2,11 @@ package com.tunesocial.backend.auth;
 
 import com.tunesocial.backend.auth.dto.AuthResponse;
 import com.tunesocial.backend.auth.dto.LoginRequest;
-import com.tunesocial.backend.security.jwt.JwtService;
+import com.tunesocial.backend.auth.exception.InvalidCredentialsException;
+import com.tunesocial.backend.common.security.jwt.JwtService;
 import com.tunesocial.backend.user.User;
 import com.tunesocial.backend.user.UserRepository;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,10 +26,10 @@ public class AuthController {
     @PostMapping("/login")
     public AuthResponse login(@Valid @RequestBody LoginRequest req) {
         User user = userRepository.findByEmail(req.email())
-                .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+                .orElseThrow(() -> new InvalidCredentialsException());
 
         if (!passwordEncoder.matches(req.password(), user.getPasswordHash())) {
-            throw new RuntimeException("Invalid credentials");
+            throw new InvalidCredentialsException();
         }
 
         String token = jwtService.generateToken(user.getId());

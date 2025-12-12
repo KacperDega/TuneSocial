@@ -1,4 +1,4 @@
-package com.tunesocial.backend.security.jwt;
+package com.tunesocial.backend.common.security.jwt;
 
 import com.tunesocial.backend.user.User;
 import com.tunesocial.backend.user.UserRepository;

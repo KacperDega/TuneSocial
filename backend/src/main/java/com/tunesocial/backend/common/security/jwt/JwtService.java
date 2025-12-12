@@ -1,4 +1,4 @@
-package com.tunesocial.backend.security.jwt;
+package com.tunesocial.backend.common.security.jwt;
 
 import com.nimbusds.jose.Algorithm;
 import io.jsonwebtoken.Jwts;

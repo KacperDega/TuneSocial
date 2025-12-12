@@ -1,4 +1,4 @@
-package com.tunesocial.backend.config;
+package com.tunesocial.backend.common.config;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Bean;

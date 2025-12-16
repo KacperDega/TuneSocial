@@ -16,12 +16,17 @@ public class User {
     @GeneratedValue
     private Long id;
 
-    @Column(unique = true)
-    private String username;
-
+    @Column(nullable = false, unique = true)
     private String email;
 
+    @Column(nullable = false, unique = true)
+    private String username; // @username
+
+    @Column(nullable = false)
+    private String displayName;
+
     @JsonIgnore
+    @Column(nullable = false)
     private String passwordHash;
 }
 

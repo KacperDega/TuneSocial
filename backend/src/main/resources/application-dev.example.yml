@@ -24,3 +24,7 @@ logging:
 
 jwt:
   secret:
+
+genius:
+  api:
+    token:

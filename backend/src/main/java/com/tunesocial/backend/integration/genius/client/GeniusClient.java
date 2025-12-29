@@ -1,5 +1,6 @@
 package com.tunesocial.backend.integration.genius.client;
 
+import com.tunesocial.backend.integration.genius.model.GeniusArtistApiResponse;
 import com.tunesocial.backend.integration.genius.model.GeniusTrackApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,6 +27,10 @@ public class GeniusClient {
 
     public GeniusTrackApiResponse getTrack(String id) {
         return getById(id, "/songs/{id}", GeniusTrackApiResponse.class);
+    }
+
+    public GeniusArtistApiResponse getArtist(String id) {
+        return getById(id, "/artists/{id}", GeniusArtistApiResponse.class);
     }
 }
 

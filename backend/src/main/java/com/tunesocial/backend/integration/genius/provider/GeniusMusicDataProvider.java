@@ -15,11 +15,13 @@ import org.springframework.stereotype.Component;
 public class GeniusMusicDataProvider implements MusicDataProvider {
 
     private final GeniusClient geniusClient;
+    private final GeniusArtistAdapter artistAdapter;
     private final GeniusTrackAdapter trackAdapter;
 
     @Override
     public ArtistResponse getArtist(String id) {
-        return null;
+        GeniusArtistApiResponse response = geniusClient.getArtist(id);
+        return artistAdapter.adapt(response);
     }
 
     @Override

@@ -15,13 +15,17 @@ public class GeniusClient {
 
     private final WebClient geniusWebClient;
 
-    public GeniusTrackApiResponse getTrack(String id) {
+    private <T> T getById(String id, String uri, Class<T> responseType){
         return geniusWebClient.get()
-                .uri("/songs/{id}", id)
+                .uri(uri, id)
                 .header("Authorization", "Bearer " + token)
                 .retrieve()
-                .bodyToMono(GeniusTrackApiResponse.class)
+                .bodyToMono(responseType)
                 .block();
+    }
+
+    public GeniusTrackApiResponse getTrack(String id) {
+        return getById(id, "/songs/{id}", GeniusTrackApiResponse.class);
     }
 }
 

@@ -1,7 +1,9 @@
 package com.tunesocial.backend.integration.genius.provider;
 
+import com.tunesocial.backend.integration.genius.adapter.GeniusArtistAdapter;
 import com.tunesocial.backend.integration.genius.adapter.GeniusTrackAdapter;
 import com.tunesocial.backend.integration.genius.client.GeniusClient;
+import com.tunesocial.backend.integration.genius.model.GeniusArtistApiResponse;
 import com.tunesocial.backend.integration.genius.model.GeniusTrackApiResponse;
 import com.tunesocial.backend.music.dto.AlbumDetailsResponse;
 import com.tunesocial.backend.music.dto.ArtistResponse;

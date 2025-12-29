@@ -23,14 +23,14 @@ public class GeniusTrackAdapter {
         List<ArtistRefDto> artists = new ArrayList<>(
                 song.primaryArtists()
                         .stream()
-                        .map(a -> new ArtistRefDto(a.id().toString(), a.name()))
+                        .map(a -> new ArtistRefDto(a.id(), a.name()))
                         .toList()
         );
 
         artists.addAll(
                 song.featuredArtists()
                         .stream()
-                        .map(a -> new ArtistRefDto(a.id().toString(), a.name()))
+                        .map(a -> new ArtistRefDto(a.id(), a.name()))
                         .toList()
         );
         //
@@ -43,7 +43,7 @@ public class GeniusTrackAdapter {
         );
 
         return new TrackResponse(
-                song.id().toString(),
+                song.id(),
                 song.title(),
                 artists,
                 song.songArtImageUrl(),

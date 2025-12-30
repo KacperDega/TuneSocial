@@ -1,5 +1,7 @@
 package com.tunesocial.backend.music.service;
 
+import com.tunesocial.backend.music.dto.AlbumDetailsResponse;
+import com.tunesocial.backend.music.dto.AlbumSummaryResponse;
 import com.tunesocial.backend.music.dto.TrackResponse;
 import com.tunesocial.backend.music.provider.MusicDataProvider;
 import lombok.RequiredArgsConstructor;
@@ -13,5 +15,9 @@ public class MusicService {
 
     public TrackResponse getTrack(String id) {
         return provider.getTrack(id);
+    }
+
+    public AlbumSummaryResponse getAlbum(String id) {
+        return provider.getAlbum(id);
     }
 }

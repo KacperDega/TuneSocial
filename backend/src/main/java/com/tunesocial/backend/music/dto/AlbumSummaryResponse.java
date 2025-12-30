@@ -8,6 +8,6 @@ public record AlbumSummaryResponse(
         String title,
         List<ArtistRefDto> artists,
         String imageUrl,
-        LocalDate releaseDate
+        String releaseDate
 ) {
 }

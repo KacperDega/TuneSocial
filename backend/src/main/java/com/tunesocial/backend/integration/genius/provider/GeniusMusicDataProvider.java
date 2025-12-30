@@ -1,11 +1,13 @@
 package com.tunesocial.backend.integration.genius.provider;
 
+import com.tunesocial.backend.integration.genius.adapter.GeniusAlbumAdapter;
 import com.tunesocial.backend.integration.genius.adapter.GeniusArtistAdapter;
 import com.tunesocial.backend.integration.genius.adapter.GeniusTrackAdapter;
 import com.tunesocial.backend.integration.genius.client.GeniusClient;
+import com.tunesocial.backend.integration.genius.model.GeniusAlbumApiResponse;
 import com.tunesocial.backend.integration.genius.model.GeniusArtistApiResponse;
 import com.tunesocial.backend.integration.genius.model.GeniusTrackApiResponse;
-import com.tunesocial.backend.music.dto.AlbumDetailsResponse;
+import com.tunesocial.backend.music.dto.AlbumSummaryResponse;
 import com.tunesocial.backend.music.dto.ArtistResponse;
 import com.tunesocial.backend.music.dto.TrackResponse;
 import com.tunesocial.backend.music.provider.MusicDataProvider;
@@ -19,6 +21,7 @@ public class GeniusMusicDataProvider implements MusicDataProvider {
     private final GeniusClient geniusClient;
     private final GeniusArtistAdapter artistAdapter;
     private final GeniusTrackAdapter trackAdapter;
+    private final GeniusAlbumAdapter albumAdapter;
 
     @Override
     public ArtistResponse getArtist(String id) {
@@ -33,8 +36,10 @@ public class GeniusMusicDataProvider implements MusicDataProvider {
     }
 
     @Override
-    public AlbumDetailsResponse getAlbum(String id) {
-        return null;
+    public AlbumSummaryResponse getAlbum(String id) {
+        GeniusAlbumApiResponse response = geniusClient.getAlbum(id);
+        return albumAdapter.adapt(response);
+    }
     }
 }
 

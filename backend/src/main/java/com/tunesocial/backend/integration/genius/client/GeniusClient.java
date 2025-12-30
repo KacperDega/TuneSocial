@@ -1,7 +1,6 @@
 package com.tunesocial.backend.integration.genius.client;
 
-import com.tunesocial.backend.integration.genius.model.GeniusArtistApiResponse;
-import com.tunesocial.backend.integration.genius.model.GeniusTrackApiResponse;
+import com.tunesocial.backend.integration.genius.model.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -16,7 +15,7 @@ public class GeniusClient {
 
     private final WebClient geniusWebClient;
 
-    private <T> T getById(String id, String uri, Class<T> responseType){
+    private <T> T getById(String id, String uri, Class<T> responseType) {
         return geniusWebClient.get()
                 .uri(uri, id)
                 .header("Authorization", "Bearer " + token)
@@ -31,6 +30,10 @@ public class GeniusClient {
 
     public GeniusArtistApiResponse getArtist(String id) {
         return getById(id, "/artists/{id}", GeniusArtistApiResponse.class);
+    }
+
+    public GeniusAlbumApiResponse getAlbum(String id) {
+        return getById(id, "/albums/{id}", GeniusAlbumApiResponse.class);
     }
 }
 

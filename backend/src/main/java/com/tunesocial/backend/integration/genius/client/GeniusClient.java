@@ -35,5 +35,23 @@ public class GeniusClient {
     public GeniusAlbumApiResponse getAlbum(String id) {
         return getById(id, "/albums/{id}", GeniusAlbumApiResponse.class);
     }
+
+    private <T> T getFromWebApi(String id, String path, Class<T> responseType) {
+        return geniusWebClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .scheme("https")
+                        .host("genius.com")
+                        .path("/api" + path)
+                        .build(id))
+                // .header("Authorization", "Bearer " + token)
+                .header("User-Agent", "Mozilla/5.0")
+                .retrieve()
+                .bodyToMono(responseType)
+                .block();
+    }
+
+    public GeniusDiscographyApiResponse getDiscography(String artistId) {
+        return getFromWebApi(artistId, "/artists/{id}/albums", GeniusDiscographyApiResponse.class);
+    }
 }
 

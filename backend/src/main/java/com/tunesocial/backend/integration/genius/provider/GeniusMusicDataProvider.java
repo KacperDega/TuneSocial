@@ -7,12 +7,15 @@ import com.tunesocial.backend.integration.genius.client.GeniusClient;
 import com.tunesocial.backend.integration.genius.model.GeniusAlbumApiResponse;
 import com.tunesocial.backend.integration.genius.model.GeniusArtistApiResponse;
 import com.tunesocial.backend.integration.genius.model.GeniusTrackApiResponse;
+import com.tunesocial.backend.integration.genius.model.GeniusTracklistApiResponse;
 import com.tunesocial.backend.music.dto.AlbumSummaryResponse;
 import com.tunesocial.backend.music.dto.ArtistResponse;
 import com.tunesocial.backend.music.dto.TrackResponse;
 import com.tunesocial.backend.music.provider.MusicDataProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -40,6 +43,10 @@ public class GeniusMusicDataProvider implements MusicDataProvider {
         GeniusAlbumApiResponse response = geniusClient.getAlbum(id);
         return albumAdapter.adapt(response);
     }
+
+    public List<TrackResponse> getTrackList(String albumId) {
+        GeniusTracklistApiResponse response = geniusClient.getAlbumTracklist(albumId);
+        return trackAdapter.adapt(response);
     }
 }
 

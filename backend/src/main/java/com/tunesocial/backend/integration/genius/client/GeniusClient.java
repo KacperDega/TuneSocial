@@ -36,6 +36,10 @@ public class GeniusClient {
         return getById(id, "/albums/{id}", GeniusAlbumApiResponse.class);
     }
 
+    public GeniusTracklistApiResponse getAlbumTracklist(String albumId){
+        return getById(albumId, "/albums/{album_id}/tracks", GeniusTracklistApiResponse.class);
+    }
+
     private <T> T getFromWebApi(String id, String path, Class<T> responseType) {
         return geniusWebClient.get()
                 .uri(uriBuilder -> uriBuilder

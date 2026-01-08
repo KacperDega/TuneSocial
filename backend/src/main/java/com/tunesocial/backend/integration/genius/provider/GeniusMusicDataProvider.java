@@ -44,6 +44,7 @@ public class GeniusMusicDataProvider implements MusicDataProvider {
         return albumAdapter.adapt(response);
     }
 
+    @Override
     public List<TrackResponse> getTrackList(String albumId) {
         GeniusTracklistApiResponse response = geniusClient.getAlbumTracklist(albumId);
         return trackAdapter.adapt(response);

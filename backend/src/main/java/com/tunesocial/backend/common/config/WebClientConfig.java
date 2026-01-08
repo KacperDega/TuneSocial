@@ -8,10 +8,17 @@ import org.springframework.web.reactive.function.client.WebClient;
 public class WebClientConfig {
 
     @Bean
-    public WebClient geniusWebClient() {
+    public WebClient geniusApiClient() {
         return WebClient.builder()
                 .baseUrl("https://api.genius.com")
                 .build();
     }
-}
 
+    @Bean
+    public WebClient geniusWebApiClient() {
+        return WebClient.builder()
+                .baseUrl("https://genius.com/api")
+                .defaultHeader("User-Agent", "Mozilla/5.0")
+                .build();
+    }
+}

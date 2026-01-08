@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.http.HttpStatusCode;
 
 @Component
 @RequiredArgsConstructor
@@ -13,49 +14,46 @@ public class GeniusClient {
     @Value("${genius.api.token}")
     private String token;
 
-    private final WebClient geniusWebClient;
+    private final WebClient geniusApiClient;
+    private final WebClient geniusWebApiClient;
 
-    private <T> T getById(String id, String uri, Class<T> responseType) {
-        return geniusWebClient.get()
+    private <T> T fetchFromApiByID(String id, String uri, Class<T> responseType) {
+        return geniusApiClient.get()
                 .uri(uri, id)
                 .header("Authorization", "Bearer " + token)
                 .retrieve()
+                .onStatus(HttpStatusCode::is5xxServerError, response -> 
+                    response.bodyToMono(String.class).map(body -> new RuntimeException("Genius API Server Error: " + body)) // TODO: EXCEPTION
+                )
                 .bodyToMono(responseType)
                 .block();
     }
 
     public GeniusTrackApiResponse getTrack(String id) {
-        return getById(id, "/songs/{id}", GeniusTrackApiResponse.class);
+        return fetchFromApiByID(id, "/songs/{id}", GeniusTrackApiResponse.class);
     }
 
     public GeniusArtistApiResponse getArtist(String id) {
-        return getById(id, "/artists/{id}", GeniusArtistApiResponse.class);
+        return fetchFromApiByID(id, "/artists/{id}", GeniusArtistApiResponse.class);
     }
 
     public GeniusAlbumApiResponse getAlbum(String id) {
-        return getById(id, "/albums/{id}", GeniusAlbumApiResponse.class);
+        return fetchFromApiByID(id, "/albums/{id}", GeniusAlbumApiResponse.class);
     }
 
     public GeniusTracklistApiResponse getAlbumTracklist(String albumId){
-        return getById(albumId, "/albums/{album_id}/tracks", GeniusTracklistApiResponse.class);
+        return fetchFromApiByID(albumId, "/albums/{album_id}/tracks", GeniusTracklistApiResponse.class);
     }
 
-    private <T> T getFromWebApi(String id, String path, Class<T> responseType) {
-        return geniusWebClient.get()
-                .uri(uriBuilder -> uriBuilder
-                        .scheme("https")
-                        .host("genius.com")
-                        .path("/api" + path)
-                        .build(id))
-                // .header("Authorization", "Bearer " + token)
-                .header("User-Agent", "Mozilla/5.0")
+    private <T> T fetchFromWebApiById(String id, String path, Class<T> responseType) {
+        return geniusWebApiClient.get()
+                .uri(path, id)
                 .retrieve()
                 .bodyToMono(responseType)
                 .block();
     }
 
     public GeniusDiscographyApiResponse getDiscography(String artistId) {
-        return getFromWebApi(artistId, "/artists/{id}/albums", GeniusDiscographyApiResponse.class);
+        return fetchFromWebApiById(artistId, "/artists/{id}/albums", GeniusDiscographyApiResponse.class);
     }
 }
-

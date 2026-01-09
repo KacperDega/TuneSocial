@@ -8,11 +8,11 @@ import java.util.List;
 
 public interface MusicDataProvider {
 
-    ArtistResponse getArtist(String id);
+    ArtistResponse getArtist(String artistId);
 
-    TrackResponse getTrack(String id);
+    TrackResponse getTrack(String trackId);
 
-    AlbumSummaryResponse getAlbum(String id);
+    AlbumSummaryResponse getAlbum(String albumId);
 
     List<TrackResponse> getTrackList(String albumId);
 }

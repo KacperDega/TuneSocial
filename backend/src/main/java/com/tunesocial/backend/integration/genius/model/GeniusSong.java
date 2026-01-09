@@ -8,7 +8,8 @@ public record GeniusSong(
         String title,
         String url,
         @JsonProperty("song_art_image_url") String songArtImageUrl,
-        @JsonProperty("release_date") String releaseDate, //TODO: FIX MISSING DATES
+        GeniusAlbumRef album,
+        @JsonProperty("release_date") String releaseDate,
         @JsonProperty("primary_artists") List<GeniusArtistRef> primaryArtists,
         @JsonProperty("featured_artists") List<GeniusArtistRef> featuredArtists
 ) {}

@@ -1,10 +1,7 @@
 package com.tunesocial.backend.integration.genius.adapter;
 
 import com.tunesocial.backend.integration.genius.model.*;
-import com.tunesocial.backend.music.dto.ArtistRefDto;
-import com.tunesocial.backend.music.dto.ExternalLinkDto;
-import com.tunesocial.backend.music.dto.ExternalLinkType;
-import com.tunesocial.backend.music.dto.TrackResponse;
+import com.tunesocial.backend.music.dto.*;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -24,6 +21,7 @@ public class GeniusTrackAdapter {
                 song.title(),
                 song.url(),
                 song.songArtImageUrl(),
+                song.album(),
                 formatDate(song.releaseDate()),
                 song.primaryArtists(),
                 song.featuredArtists()
@@ -46,6 +44,7 @@ public class GeniusTrackAdapter {
                 song.title(),
                 song.url(),
                 song.songArtImageUrl(),
+                null,
                 formatDate(song.releaseDate()),
                 song.primaryArtists(),
                 song.featuredArtists()
@@ -53,7 +52,7 @@ public class GeniusTrackAdapter {
     }
 
     private TrackResponse mapToTrackResponse(
-            String id, String title, String url, String imageUrl,
+            String id, String title, String url, String imageUrl, GeniusAlbumRef album,
             String date, List<GeniusArtistRef> primary, List<GeniusArtistRef> featured) {
 
         List<ArtistRefDto> artists = new ArrayList<>(
@@ -72,7 +71,12 @@ public class GeniusTrackAdapter {
                 new ExternalLinkDto(ExternalLinkType.GENIUS, url)
         );
 
-        return new TrackResponse(id, title, artists, imageUrl, date, links);
+        AlbumRefDto albumOrigin = null;
+        if (album != null) {
+            albumOrigin = new AlbumRefDto(album.id(), album.name());
+        }
+
+        return new TrackResponse(id, title, imageUrl, albumOrigin, date, artists, links);
     }
 
     private String formatDate(String date) {

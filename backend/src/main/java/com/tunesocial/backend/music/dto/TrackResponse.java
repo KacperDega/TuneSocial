@@ -1,6 +1,5 @@
 package com.tunesocial.backend.music.dto;
 
-import java.time.LocalDate;
 import java.util.List;
 
 public record TrackResponse(
@@ -8,7 +7,7 @@ public record TrackResponse(
         String title,
         List<ArtistRefDto> artists,
         String imageUrl,
-        LocalDate releaseDate,
+        String releaseDate,
         List<ExternalLinkDto> links
 ) {
 }

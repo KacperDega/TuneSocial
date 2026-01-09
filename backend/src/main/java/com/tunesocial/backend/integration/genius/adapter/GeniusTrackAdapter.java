@@ -8,6 +8,8 @@ import com.tunesocial.backend.music.dto.TrackResponse;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,7 +24,7 @@ public class GeniusTrackAdapter {
                 song.title(),
                 song.url(),
                 song.songArtImageUrl(),
-                parseDate(song.releaseDate()),
+                formatDate(song.releaseDate()),
                 song.primaryArtists(),
                 song.featuredArtists()
         );
@@ -44,7 +46,7 @@ public class GeniusTrackAdapter {
                 song.title(),
                 song.url(),
                 song.songArtImageUrl(),
-                parseComponents(song.releaseDate()),
+                formatDate(song.releaseDate()),
                 song.primaryArtists(),
                 song.featuredArtists()
         );
@@ -52,7 +54,7 @@ public class GeniusTrackAdapter {
 
     private TrackResponse mapToTrackResponse(
             String id, String title, String url, String imageUrl,
-            LocalDate date, List<GeniusArtistRef> primary, List<GeniusArtistRef> featured) {
+            String date, List<GeniusArtistRef> primary, List<GeniusArtistRef> featured) {
 
         List<ArtistRefDto> artists = new ArrayList<>(
                 primary.stream()
@@ -73,18 +75,40 @@ public class GeniusTrackAdapter {
         return new TrackResponse(id, title, artists, imageUrl, date, links);
     }
 
-    private LocalDate parseDate(String date) {
-        return (date == null) ? null : LocalDate.parse(date);
+    private String formatDate(String date) {
+        if (date == null || date.isBlank()) return "";
+
+        if (date.matches("\\d{4}-\\d{2}-\\d{2}")) {
+            return LocalDate.parse(date)
+                    .format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+        }
+
+        if (date.matches("\\d{4}-\\d{2}")) {
+            return YearMonth.parse(date)
+                    .format(DateTimeFormatter.ofPattern("MM.yyyy"));
+        }
+
+        if (date.matches("\\d{4}")) {
+            return date;
+        }
+
+        return "";
     }
 
-    private LocalDate parseComponents(ReleaseDateComponents c) {
-        if (c == null || c.year() == null) return null;
+    private String formatDate(ReleaseDateComponents c) {
+        if (c == null || c.year() == null) {
+            return "";
+        }
 
-        // null
-        int month = (c.month() != null) ? c.month() : 1;
-        int day = (c.day() != null) ? c.day() : 1;
+        Integer year = c.year();
+        Integer month = c.month();
+        Integer day = c.day();
 
-        return LocalDate.of(c.year(), month, day);
+        if (month != null && day != null) {
+            return String.format("%02d.%02d.%d", day, month, year);
+        } else if (month != null) {
+            return String.format("%02d.%d", month, year);
+        }
+        return String.valueOf(year);
     }
 }
-

@@ -4,6 +4,7 @@ package com.tunesocial.backend.user;
 import com.tunesocial.backend.user.dto.CreateUserRequest;
 import com.tunesocial.backend.user.dto.UserResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -43,5 +44,13 @@ public class UserController {
     public void delete(@PathVariable Long id) {
         userService.delete(id);
     }
+
+    @GetMapping("/me")
+    public UserResponse me(Authentication auth) {
+        User currentUser = (User) auth.getPrincipal();
+
+        return userMapper.toUserResponse(currentUser);
+    }
+
 }
 

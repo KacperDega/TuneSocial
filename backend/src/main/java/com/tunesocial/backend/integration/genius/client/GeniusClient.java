@@ -1,11 +1,14 @@
 package com.tunesocial.backend.integration.genius.client;
 
+import com.tunesocial.backend.integration.genius.exception.*;
 import com.tunesocial.backend.integration.genius.model.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientRequestException;
 import org.springframework.http.HttpStatusCode;
+import org.springframework.stereotype.Component;
+import reactor.core.publisher.Mono;
 
 @Component
 @RequiredArgsConstructor
@@ -18,15 +21,25 @@ public class GeniusClient {
     private final WebClient geniusWebApiClient;
 
     private <T> T fetchFromApiByID(String id, String uri, Class<T> responseType) {
-        return geniusApiClient.get()
-                .uri(uri, id)
-                .header("Authorization", "Bearer " + token)
-                .retrieve()
-                .onStatus(HttpStatusCode::is5xxServerError, response -> 
-                    response.bodyToMono(String.class).map(body -> new RuntimeException("Genius API Server Error: " + body)) // TODO: EXCEPTION
-                )
-                .bodyToMono(responseType)
-                .block();
+        return execute(
+                geniusApiClient.get()
+                        .uri(uri, id)
+                        .header("Authorization", "Bearer " + token)
+                        .retrieve()
+                        .onStatus(
+                                status -> status.is4xxClientError() && status.value() == 404,
+                                response -> Mono.error(new GeniusNotFoundException(id))
+                        )
+                        .onStatus(
+                                HttpStatusCode::is4xxClientError,
+                                r -> Mono.error(new GeniusClientException(r.statusCode().value()))
+                        )
+                        .onStatus(
+                                HttpStatusCode::is5xxServerError,
+                                response -> Mono.error(new GeniusServerException())
+                        )
+                        .bodyToMono(responseType)
+        );
     }
 
     public GeniusTrackApiResponse getTrack(String id) {
@@ -46,11 +59,34 @@ public class GeniusClient {
     }
 
     private <T> T fetchFromWebApiById(String id, String path, Class<T> responseType) {
-        return geniusWebApiClient.get()
-                .uri(path, id)
-                .retrieve()
-                .bodyToMono(responseType)
-                .block();
+        return execute(
+                geniusWebApiClient.get()
+                        .uri(path, id)
+                        .retrieve()
+                        .onStatus(
+                                status -> status.value() == 404,
+                                response -> Mono.error(new GeniusNotFoundException(id))
+                        )
+                        .onStatus(
+                                HttpStatusCode::is4xxClientError,
+                                r -> Mono.error(new GeniusClientException(r.statusCode().value()))
+                        )
+                        .onStatus(
+                                HttpStatusCode::is5xxServerError,
+                                response -> Mono.error(new GeniusServerException())
+                        )
+                        .bodyToMono(responseType)
+        );
+    }
+
+    private <T> T execute(Mono<T> request) {
+        try {
+            return request.block();
+        } catch (GeniusException e) {
+            throw e;
+        } catch (WebClientRequestException e) {
+            throw new GeniusServerException(e);
+        }
     }
 
     public GeniusDiscographyApiResponse getDiscography(String artistId) {

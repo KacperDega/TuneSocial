@@ -10,14 +10,7 @@ import lombok.Setter;
 @Table(
         uniqueConstraints = @UniqueConstraint(
                 columnNames = {"target_id", "target_type"}
-        ),
-        //TODO: redundant?
-        indexes = {
-                @Index(
-                        name = "idx_summary_target_idtype",
-                        columnList = "target_id, target_type"
-                )
-        }
+        )
 )
 public class RatingSummary {
 

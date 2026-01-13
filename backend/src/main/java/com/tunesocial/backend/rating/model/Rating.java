@@ -17,10 +17,6 @@ import java.time.Instant;
                 @Index(
                         name = "idx_rating_target_idtype",
                         columnList = "target_id, target_type"
-                ),
-                @Index(
-                        name = "idx_rating_userid",
-                        columnList = "user_id"
                 )
         }
 )

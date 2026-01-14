@@ -14,7 +14,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -24,8 +24,8 @@ public class RatingService {
     private final RatingRepository ratingRepository;
     private final RatingSummaryRepository summaryRepository;
 
-    //TODO: CURRENT USER VALIDATION
 
+    // TODO: optionally validate external target existence via provider
     @Transactional
     public void rate(Long userId, String targetId, RatingTargetType type, int value) {
         if (value < 1 || value > 10) {
@@ -67,6 +67,35 @@ public class RatingService {
 
         summaryRepository.updateSummary(summary.getTargetId(), summary.getTargetType(), -1, -rating.getValue());
         ratingRepository.delete(rating);
+    }
+
+    @Transactional
+    public Rating findUserRatingForTarget(Long userId, String targetId, RatingTargetType type) {
+
+        return ratingRepository.findByUserIdAndTargetIdAndTargetType(userId, targetId, type)
+                .orElseThrow(() ->
+                        new RatingNotFoundException(userId, targetId, type)
+                );
+    }
+
+    @Transactional
+    public RatingSummary getSummaryForTarget(String targetId, RatingTargetType type) {
+
+        return summaryRepository
+                .findByTargetIdAndTargetType(targetId, type)
+                .orElseGet(() -> {
+                    RatingSummary empty = new RatingSummary();
+                    empty.setTargetId(targetId);
+                    empty.setTargetType(type);
+                    empty.setRatingCount(0);
+                    empty.setRatingSum(0);
+                    return empty;
+                });
+    }
+
+    @Transactional
+    public List<Rating> getRatingsForUser(Long userId) {
+        return ratingRepository.findAllByUserId((userId));
     }
 
     private RatingSummary createSummary(String targetId, RatingTargetType type) {

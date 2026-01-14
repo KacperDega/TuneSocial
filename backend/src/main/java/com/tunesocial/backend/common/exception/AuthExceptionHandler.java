@@ -15,19 +15,31 @@ public class AuthExceptionHandler {
     @ExceptionHandler(InvalidCredentialsException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public ApiError handleInvalidCredentialsException(InvalidCredentialsException ex) {
-        return new ApiError(HttpStatus.UNAUTHORIZED.value(), ex.getMessage());
+        return new ApiError(
+                HttpStatus.UNAUTHORIZED.value(),
+                "INVALID_CREDENTIALS",
+                "Invalid username or password."
+        );
     }
 
     @ExceptionHandler(UsernameAlreadyExistsException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public ApiError handleUsernameExists(UsernameAlreadyExistsException ex) {
-        return new ApiError(HttpStatus.CONFLICT.value(), ex.getMessage());
+        return new ApiError(
+                HttpStatus.CONFLICT.value(),
+                "USERNAME_ALREADY_EXISTS",
+                "Username is already taken."
+        );
     }
 
     @ExceptionHandler(EmailAlreadyExistsException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public ApiError handleEmailExists(EmailAlreadyExistsException ex) {
-        return new ApiError(HttpStatus.CONFLICT.value(), ex.getMessage());
+        return new ApiError(
+                HttpStatus.CONFLICT.value(),
+                "EMAIL_ALREADY_EXISTS",
+                "Email is already registered."
+        );
     }
 
 }

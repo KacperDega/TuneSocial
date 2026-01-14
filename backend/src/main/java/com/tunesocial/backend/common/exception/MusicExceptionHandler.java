@@ -17,7 +17,8 @@ public class MusicExceptionHandler {
     public ApiError handleMusicItemNotFound(MusicItemNotFoundException ex) {
         return new ApiError(
                 HttpStatus.NOT_FOUND.value(),
-                ex.getMessage()
+                "MUSIC_ITEM_NOT_FOUND",
+                "Requested music item was not found."
         );
     }
 
@@ -26,7 +27,8 @@ public class MusicExceptionHandler {
     public ApiError handleExternalServiceClient(ExternalServiceClientException ex) {
         return new ApiError(
                 HttpStatus.BAD_GATEWAY.value(),
-                ex.getMessage()
+                "EXTERNAL_SERVICE_CLIENT_ERROR",
+                "Upstream service returned an invalid response."
         );
     }
 
@@ -35,7 +37,8 @@ public class MusicExceptionHandler {
     public ApiError handleExternalServiceUnavailable(ExternalServiceUnavailableException ex) {
         return new ApiError(
                 HttpStatus.SERVICE_UNAVAILABLE.value(),
-                ex.getMessage()
+                "EXTERNAL_SERVICE_UNAVAILABLE",
+                "Upstream service is temporarily unavailable."
         );
     }
 }

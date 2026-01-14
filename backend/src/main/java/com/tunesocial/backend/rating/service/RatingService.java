@@ -1,5 +1,8 @@
 package com.tunesocial.backend.rating.service;
 
+import com.tunesocial.backend.rating.exception.InvalidRatingValueException;
+import com.tunesocial.backend.rating.exception.RatingNotFoundException;
+import com.tunesocial.backend.rating.exception.RatingSummaryNotFoundException;
 import com.tunesocial.backend.rating.model.Rating;
 import com.tunesocial.backend.rating.model.RatingSummary;
 import com.tunesocial.backend.rating.model.RatingTargetType;
@@ -7,6 +10,7 @@ import com.tunesocial.backend.rating.repository.RatingRepository;
 import com.tunesocial.backend.rating.repository.RatingSummaryRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -20,10 +24,12 @@ public class RatingService {
     private final RatingRepository ratingRepository;
     private final RatingSummaryRepository summaryRepository;
 
+    //TODO: CURRENT USER VALIDATION
+
     @Transactional
     public void rate(Long userId, String targetId, RatingTargetType type, int value) {
         if (value < 1 || value > 10) {
-            throw new IllegalArgumentException("Rating must be between 1 and 10");
+            throw new InvalidRatingValueException(value);
         }
 
         Optional<Rating> existingOpt =
@@ -38,6 +44,29 @@ public class RatingService {
         } else {
             createNewRating(userId, targetId, type, value, summary);
         }
+    }
+
+    @Transactional
+    public void removeRating(Long currentUserId, Long id) {
+
+        Rating rating = ratingRepository.findById(id)
+                .orElseThrow(() -> new RatingNotFoundException(id));
+
+        if (!rating.getUserId().equals(currentUserId)) {
+            throw new AccessDeniedException("Cannot delete other user's rating");
+        }
+
+        RatingSummary summary = summaryRepository
+                .findByTargetIdAndTargetType(rating.getTargetId(), rating.getTargetType())
+                .orElseThrow(() ->
+                        new RatingSummaryNotFoundException(
+                                rating.getTargetId(),
+                                rating.getTargetType()
+                        )
+                );
+
+        summaryRepository.updateSummary(summary.getTargetId(), summary.getTargetType(), -1, -rating.getValue());
+        ratingRepository.delete(rating);
     }
 
     private RatingSummary createSummary(String targetId, RatingTargetType type) {
@@ -60,7 +89,6 @@ public class RatingService {
 
         ratingRepository.save(rating);
 
-        // TODO: rozjazd?
         summaryRepository.updateSummary(targetId, type, 1, value);
     }
 
@@ -72,6 +100,4 @@ public class RatingService {
 
         summaryRepository.updateSummary(rating.getTargetId(), rating.getTargetType(), 0, newValue - oldValue);
     }
-
-    //TODO: deleting ratings
 }

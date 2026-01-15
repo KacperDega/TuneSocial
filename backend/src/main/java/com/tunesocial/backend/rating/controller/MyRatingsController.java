@@ -1,0 +1,49 @@
+package com.tunesocial.backend.rating.controller;
+
+import com.tunesocial.backend.rating.dto.RatingResponse;
+import com.tunesocial.backend.rating.model.Rating;
+import com.tunesocial.backend.rating.model.RatingTargetType;
+import com.tunesocial.backend.rating.service.RatingService;
+import com.tunesocial.backend.user.User;
+import com.tunesocial.backend.user.UserService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@RestController
+@RequestMapping("/users/me/ratings")
+@RequiredArgsConstructor
+public class MyRatingsController {
+
+    private final RatingService ratingService;
+    private final UserService userService;
+
+    @GetMapping("/{targetType}/{targetId}")
+    public RatingResponse getMyRatingForTarget(@PathVariable String targetId,
+                                               @PathVariable RatingTargetType targetType,
+                                               Authentication authentication) {
+        Long currentUserId = userService.getCurrentUserId(authentication);
+
+        Rating rating = ratingService.findUserRatingForTarget(
+                            currentUserId,
+                            targetId,
+                            targetType);
+
+        return RatingResponse.fromEntity(rating);
+    }
+
+    @GetMapping()
+    public List<RatingResponse> getMyRatings(Authentication authentication) {
+
+        Long currentUserId = userService.getCurrentUserId(authentication);
+
+        List<Rating> ratings = ratingService.getRatingsForUser(currentUserId);
+
+        return ratings.stream()
+                .map(RatingResponse::fromEntity)
+                .collect(Collectors.toList());
+    }
+}

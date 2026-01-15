@@ -32,4 +32,13 @@ public class GlobalExceptionHandler {
                 ex.getMessage()
         );
     }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ApiError handleIllegalState(IllegalStateException ex) {
+        return new ApiError(
+                401,
+                "USER_NOT_AUTHENTICATED",
+                ex.getMessage()
+        );
+    }
 }

@@ -7,10 +7,7 @@ import com.tunesocial.backend.integration.genius.client.GeniusClient;
 import com.tunesocial.backend.integration.genius.exception.GeniusClientException;
 import com.tunesocial.backend.integration.genius.exception.GeniusNotFoundException;
 import com.tunesocial.backend.integration.genius.exception.GeniusServerException;
-import com.tunesocial.backend.integration.genius.model.GeniusAlbumApiResponse;
-import com.tunesocial.backend.integration.genius.model.GeniusArtistApiResponse;
-import com.tunesocial.backend.integration.genius.model.GeniusTrackApiResponse;
-import com.tunesocial.backend.integration.genius.model.GeniusTracklistApiResponse;
+import com.tunesocial.backend.integration.genius.model.*;
 import com.tunesocial.backend.music.dto.AlbumSummaryResponse;
 import com.tunesocial.backend.music.dto.ArtistResponse;
 import com.tunesocial.backend.music.dto.TrackResponse;
@@ -54,6 +51,11 @@ public class GeniusMusicDataProvider implements MusicDataProvider {
         GeniusArtistApiResponse response = callGenius(() -> geniusClient.getArtist(artistId));
         return artistAdapter.adaptArtist(response);
     }
+
+    @Override
+    public List<AlbumSummaryResponse> getDiscography(String artistId) {
+        GeniusDiscographyApiResponse response = callGenius(() -> geniusClient.getDiscography(artistId));
+        return artistAdapter.adaptDiscography(response);
     }
 
     @Override

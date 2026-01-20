@@ -13,7 +13,7 @@ import java.util.List;
 public class GeniusAlbumMapper {
 
     public AlbumSummaryResponse toAlbumSummary(GeniusAlbum album) {
-        List<ArtistRefDto> artists = adaptArtists(album.primaryArtists());
+        List<ArtistRefDto> artists = adaptAlbumArtists(album.primaryArtists());
 
         String releaseDate = formatReleaseDate(album.releaseDate());
 
@@ -26,7 +26,7 @@ public class GeniusAlbumMapper {
         );
     }
 
-    private List<ArtistRefDto> adaptArtists(List<GeniusArtistRef> primaryArtists) {
+    private List<ArtistRefDto> adaptAlbumArtists(List<GeniusArtistRef> primaryArtists) {
         if (primaryArtists == null) return List.of();
 
         return primaryArtists.stream()

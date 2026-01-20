@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class GeniusArtistAdapter {
 
-    public ArtistResponse adapt(GeniusArtistApiResponse res) {
+    public ArtistResponse adaptArtist(GeniusArtistApiResponse res) {
         GeniusArtist artist = res.response().artist();
 
         String description = unwrapDescription(artist.description());

@@ -13,7 +13,7 @@ import java.util.List;
 @Component
 public class GeniusTrackAdapter {
 
-    public TrackResponse adapt(GeniusTrackApiResponse res) {
+    public TrackResponse adaptTrack(GeniusTrackApiResponse res) {
         GeniusSong song = res.response().song();
 
         return mapToTrackResponse(
@@ -28,17 +28,17 @@ public class GeniusTrackAdapter {
         );
     }
 
-    public List<TrackResponse> adapt(GeniusTracklistApiResponse res) {
+    public List<TrackResponse> adaptTrack(GeniusTracklistApiResponse res) {
         if (res == null || res.response() == null || res.response().tracks() == null) {
             return List.of();
         }
 
         return res.response().tracks().stream()
-                .map(track -> adapt(track.song()))
+                .map(track -> mapTracklistSong(track.song()))
                 .toList();
     }
 
-    private TrackResponse adapt(GeniusTracklistSong song) {
+    private TrackResponse mapTracklistSong(GeniusTracklistSong song) {
         return mapToTrackResponse(
                 song.id(),
                 song.title(),

@@ -48,29 +48,30 @@ public class GeniusMusicDataProvider implements MusicDataProvider {
         }
     }
 
-
+    
     @Override
-    public ArtistResponse getArtist(String id) {
-        GeniusArtistApiResponse response = callGenius(() -> geniusClient.getArtist(id));
-        return artistAdapter.adapt(response);
+    public ArtistResponse getArtist(String artistId) {
+        GeniusArtistApiResponse response = callGenius(() -> geniusClient.getArtist(artistId));
+        return artistAdapter.adaptArtist(response);
+    }
     }
 
     @Override
-    public TrackResponse getTrack(String id) {
-        GeniusTrackApiResponse response = callGenius(() -> geniusClient.getTrack(id));
-        return trackAdapter.adapt(response);
+    public TrackResponse getTrack(String trackId) {
+        GeniusTrackApiResponse response = callGenius(() -> geniusClient.getTrack(trackId));
+        return trackAdapter.adaptTrack(response);
     }
 
     @Override
-    public AlbumSummaryResponse getAlbum(String id) {
-        GeniusAlbumApiResponse response = callGenius(() -> geniusClient.getAlbum(id));
-        return albumAdapter.adapt(response);
+    public AlbumSummaryResponse getAlbum(String albumId) {
+        GeniusAlbumApiResponse response = callGenius(() -> geniusClient.getAlbum(albumId));
+        return albumAdapter.adaptAlbum(response);
     }
 
     @Override
     public List<TrackResponse> getTrackList(String albumId) {
         GeniusTracklistApiResponse response = callGenius(() -> geniusClient.getAlbumTracklist(albumId));
-        return trackAdapter.adapt(response);
+        return trackAdapter.adaptTrack(response);
     }
 
 }

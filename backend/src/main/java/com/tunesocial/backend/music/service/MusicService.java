@@ -28,6 +28,10 @@ public class MusicService {
         return provider.getArtist(artistId);
     }
 
+    public List<AlbumSummaryResponse> getDiscography(String artistId) {
+        return provider.getDiscography(artistId);
+    }
+
     public List<TrackResponse> getTracklist(String albumId) {
         return provider.getTrackList(albumId);
     }

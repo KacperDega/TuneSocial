@@ -34,6 +34,11 @@ public class MusicController {
         return musicService.getArtist(artistId);
     }
 
+    @GetMapping("/artists/{artistId}/albums")
+    public List<AlbumSummaryResponse> getDiscography(@PathVariable String artistId) {
+        return musicService.getDiscography(artistId);
+    }
+
     @GetMapping("/albums/{albumId}/tracklist")
     public List<TrackResponse> getTracklist(@PathVariable String albumId) {
         return musicService.getTracklist(albumId);

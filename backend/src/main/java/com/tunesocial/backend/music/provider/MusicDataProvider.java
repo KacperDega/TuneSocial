@@ -10,6 +10,8 @@ public interface MusicDataProvider {
 
     ArtistResponse getArtist(String artistId);
 
+    List<AlbumSummaryResponse> getDiscography(String artistId);
+
     TrackResponse getTrack(String trackId);
 
     AlbumSummaryResponse getAlbum(String albumId);

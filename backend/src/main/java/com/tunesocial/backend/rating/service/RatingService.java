@@ -8,7 +8,7 @@ import com.tunesocial.backend.rating.model.RatingSummary;
 import com.tunesocial.backend.rating.model.RatingTargetType;
 import com.tunesocial.backend.rating.repository.RatingRepository;
 import com.tunesocial.backend.rating.repository.RatingSummaryRepository;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -69,7 +69,7 @@ public class RatingService {
         ratingRepository.delete(rating);
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public Rating findUserRatingForTarget(Long userId, String targetId, RatingTargetType type) {
 
         return ratingRepository.findByUserIdAndTargetIdAndTargetType(userId, targetId, type)
@@ -78,7 +78,7 @@ public class RatingService {
                 );
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public RatingSummary getSummaryForTarget(String targetId, RatingTargetType type) {
 
         return summaryRepository
@@ -93,7 +93,7 @@ public class RatingService {
                 });
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public List<Rating> getRatingsForUser(Long userId) {
         return ratingRepository.findAllByUserId((userId));
     }

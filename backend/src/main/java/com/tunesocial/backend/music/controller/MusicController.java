@@ -2,9 +2,12 @@ package com.tunesocial.backend.music.controller;
 
 import com.tunesocial.backend.music.dto.AlbumSummaryResponse;
 import com.tunesocial.backend.music.dto.ArtistResponse;
+import com.tunesocial.backend.music.dto.TrackDetailsResponse;
 import com.tunesocial.backend.music.dto.TrackResponse;
 import com.tunesocial.backend.music.service.MusicService;
+import com.tunesocial.backend.user.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,6 +21,7 @@ import java.util.List;
 public class MusicController {
 
     private final MusicService musicService;
+    private final UserService userService;
 
     @GetMapping("/tracks/{trackId}")
     public TrackResponse getTrack(@PathVariable String trackId) {
@@ -43,5 +47,13 @@ public class MusicController {
     public List<TrackResponse> getTracklist(@PathVariable String albumId) {
         return musicService.getTracklist(albumId);
     }
+
+    @GetMapping("/tracks/{trackId}")
+    public TrackDetailsResponse getTrack(@PathVariable String trackId, Authentication authentication) {
+        Long userId = userService.getCurrentUserId(authentication);
+
+        return musicService.getTrackDetails(trackId, userId);
+    }
+
 }
 

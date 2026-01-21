@@ -1,6 +1,7 @@
 package com.tunesocial.backend.rating.controller;
 
 import com.tunesocial.backend.rating.dto.RatingResponse;
+import com.tunesocial.backend.rating.exception.RatingNotFoundException;
 import com.tunesocial.backend.rating.model.Rating;
 import com.tunesocial.backend.rating.model.RatingTargetType;
 import com.tunesocial.backend.rating.service.RatingService;
@@ -27,12 +28,11 @@ public class MyRatingsController {
                                                Authentication authentication) {
         Long currentUserId = userService.getCurrentUserId(authentication);
 
-        Rating rating = ratingService.findUserRatingForTarget(
-                            currentUserId,
-                            targetId,
-                            targetType);
-
-        return RatingResponse.fromEntity(rating);
+        return ratingService.findUserRatingForTarget(currentUserId, targetId, targetType)
+                .map(RatingResponse::fromEntity)
+                .orElseThrow(() ->
+                        new RatingNotFoundException(currentUserId, targetId, targetType)
+                );
     }
 
     @GetMapping()

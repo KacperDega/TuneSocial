@@ -70,12 +70,9 @@ public class RatingService {
     }
 
     @Transactional(readOnly = true)
-    public Rating findUserRatingForTarget(Long userId, String targetId, RatingTargetType type) {
+    public Optional<Rating> findUserRatingForTarget(Long userId, String targetId, RatingTargetType type) {
 
-        return ratingRepository.findByUserIdAndTargetIdAndTargetType(userId, targetId, type)
-                .orElseThrow(() ->
-                        new RatingNotFoundException(userId, targetId, type)
-                );
+        return ratingRepository.findByUserIdAndTargetIdAndTargetType(userId, targetId, type);
     }
 
     @Transactional(readOnly = true)

@@ -5,7 +5,6 @@ import com.tunesocial.backend.rating.exception.RatingNotFoundException;
 import com.tunesocial.backend.rating.model.Rating;
 import com.tunesocial.backend.rating.model.RatingTargetType;
 import com.tunesocial.backend.rating.service.RatingService;
-import com.tunesocial.backend.user.User;
 import com.tunesocial.backend.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
@@ -26,7 +25,7 @@ public class MyRatingsController {
     public RatingResponse getMyRatingForTarget(@PathVariable String targetId,
                                                @PathVariable RatingTargetType targetType,
                                                Authentication authentication) {
-        Long currentUserId = userService.getCurrentUserId(authentication);
+        Long currentUserId = userService.getCurrentUserIdOrThrow(authentication);
 
         return ratingService.findUserRatingForTarget(currentUserId, targetId, targetType)
                 .map(RatingResponse::fromEntity)
@@ -38,7 +37,7 @@ public class MyRatingsController {
     @GetMapping()
     public List<RatingResponse> getMyRatings(Authentication authentication) {
 
-        Long currentUserId = userService.getCurrentUserId(authentication);
+        Long currentUserId = userService.getCurrentUserIdOrThrow(authentication);
 
         List<Rating> ratings = ratingService.getRatingsForUser(currentUserId);
 

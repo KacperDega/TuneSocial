@@ -1,22 +1,16 @@
 package com.tunesocial.backend.rating.controller;
 
 import com.tunesocial.backend.rating.dto.RateRequest;
-import com.tunesocial.backend.rating.dto.RatingResponse;
 import com.tunesocial.backend.rating.dto.RatingSummaryResponse;
-import com.tunesocial.backend.rating.model.Rating;
 import com.tunesocial.backend.rating.model.RatingSummary;
 import com.tunesocial.backend.rating.model.RatingTargetType;
 import com.tunesocial.backend.rating.service.RatingService;
-import com.tunesocial.backend.user.User;
 import com.tunesocial.backend.user.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/ratings")
@@ -28,7 +22,7 @@ public class RatingController {
 
     @PostMapping
     public ResponseEntity<Void> rate(@RequestBody @Valid RateRequest request, Authentication authentication) {
-        Long currentUserId = userService.getCurrentUserId(authentication);
+        Long currentUserId = userService.getCurrentUserIdOrThrow(authentication);
 
         ratingService.rate(currentUserId, request.targetId(), request.targetType(), request.value());
         return ResponseEntity.ok().build();
@@ -36,7 +30,7 @@ public class RatingController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> removeRating(@PathVariable Long id, Authentication authentication) {
-        Long currentUserId = userService.getCurrentUserId(authentication);
+        Long currentUserId = userService.getCurrentUserIdOrThrow(authentication);
 
         ratingService.removeRating(currentUserId, id);
         return ResponseEntity.noContent().build();

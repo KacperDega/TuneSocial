@@ -126,4 +126,16 @@ public class RatingService {
 
         summaryRepository.updateSummary(rating.getTargetId(), rating.getTargetType(), 0, newValue - oldValue);
     }
+
+    public Integer findUserRatingValue(Long userId, String targetId, RatingTargetType type) {
+
+        if (userId == null) {
+            return null;
+        }
+
+        return ratingRepository
+                .findByUserIdAndTargetIdAndTargetType(userId, targetId, type)
+                .map(Rating::getValue)
+                .orElse(null);
+    }
 }

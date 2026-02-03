@@ -1,10 +1,7 @@
 package com.tunesocial.backend.music.service;
 
-import com.tunesocial.backend.music.dto.AlbumSummaryResponse;
-import com.tunesocial.backend.music.dto.ArtistResponse;
-import com.tunesocial.backend.music.dto.TrackResponse;
+import com.tunesocial.backend.music.dto.*;
 import com.tunesocial.backend.music.provider.MusicDataProvider;
-import com.tunesocial.backend.music.dto.TrackDetailsResponse;
 import com.tunesocial.backend.rating.model.Rating;
 import com.tunesocial.backend.rating.model.RatingSummary;
 import com.tunesocial.backend.rating.model.RatingTargetType;
@@ -53,13 +50,41 @@ public class MusicService {
                         RatingTargetType.TRACK
                 );
 
-        Integer userRating = ratingService
-                .findUserRatingForTarget(currentUserId, trackId, RatingTargetType.TRACK)
-                .map(Rating::getValue)
-                .orElse(null);
+        Integer userRating = ratingService.findUserRatingValue(
+                currentUserId,
+                trackId,
+                RatingTargetType.TRACK
+        );
 
         return TrackDetailsResponse.from(
                 track,
+                summary.getRatingCount(),
+                summary.getRatingSum(),
+                userRating
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public AlbumDetailsResponse getAlbumDetails(String albumId, Long currentUserId) {
+
+        AlbumSummaryResponse album = provider.getAlbum(albumId);
+        List<TrackResponse> tracks = provider.getTrackList(albumId);
+
+        RatingSummary summary =
+                ratingService.getSummaryForTarget(
+                        albumId,
+                        RatingTargetType.ALBUM
+                );
+
+        Integer userRating = ratingService.findUserRatingValue(
+                currentUserId,
+                albumId,
+                RatingTargetType.ALBUM
+        );
+
+        return AlbumDetailsResponse.from(
+                album,
+                tracks,
                 summary.getRatingCount(),
                 summary.getRatingSum(),
                 userRating

@@ -1,9 +1,6 @@
 package com.tunesocial.backend.music.controller;
 
-import com.tunesocial.backend.music.dto.AlbumSummaryResponse;
-import com.tunesocial.backend.music.dto.ArtistResponse;
-import com.tunesocial.backend.music.dto.TrackDetailsResponse;
-import com.tunesocial.backend.music.dto.TrackResponse;
+import com.tunesocial.backend.music.dto.*;
 import com.tunesocial.backend.music.service.MusicService;
 import com.tunesocial.backend.user.UserService;
 import lombok.RequiredArgsConstructor;
@@ -23,10 +20,10 @@ public class MusicController {
     private final MusicService musicService;
     private final UserService userService;
 
-    @GetMapping("/tracks/{trackId}")
-    public TrackResponse getTrack(@PathVariable String trackId) {
-        return musicService.getTrack(trackId);
-    }
+//    @GetMapping("/tracks/{trackId}")
+//    public TrackResponse getTrack(@PathVariable String trackId) {
+//        return musicService.getTrack(trackId);
+//    }
 
     @GetMapping("/albums/{albumId}")
     public AlbumSummaryResponse getAlbum(@PathVariable String albumId) {
@@ -49,10 +46,17 @@ public class MusicController {
     }
 
     @GetMapping("/tracks/{trackId}")
-    public TrackDetailsResponse getTrack(@PathVariable String trackId, Authentication authentication) {
-        Long userId = userService.getCurrentUserId(authentication);
+    public TrackDetailsResponse getTrackDetails(@PathVariable String trackId, Authentication authentication) {
+        Long userId = userService.getCurrentUserIdOrNull(authentication);
 
         return musicService.getTrackDetails(trackId, userId);
+    }
+
+    @GetMapping("/albums/{albumId}")
+    public AlbumDetailsResponse getAlbum(@PathVariable String albumId, Authentication authentication) {
+        Long userId = userService.getCurrentUserIdOrNull(authentication);
+
+        return musicService.getAlbumDetails(albumId, userId);
     }
 
 }

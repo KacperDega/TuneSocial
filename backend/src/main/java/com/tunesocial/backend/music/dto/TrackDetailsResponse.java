@@ -1,15 +1,18 @@
 package com.tunesocial.backend.music.dto;
 
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Embedded;
+
 import java.util.List;
 
 public record TrackDetailsResponse(
         String id,
         String title,
         String imageUrl,
-        AlbumRefDto album,
+        @Embedded AlbumRefDto album,
         String releaseDate,
-        List<ArtistRefDto> artists,
-        List<ExternalLinkDto> links,
+        @ElementCollection List<ArtistRefDto> artists,
+        @ElementCollection List<ExternalLinkDto> links,
 
         double averageRating,
         long ratingCount,

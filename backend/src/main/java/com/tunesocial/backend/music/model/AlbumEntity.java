@@ -28,7 +28,13 @@ public class AlbumEntity implements CacheableEntity {
     private LocalDateTime lastUpdated;
 
     public void addTrack(TrackEntity track) {
-        tracks.add(track);
-        track.setAlbum(this);
+        if (track == null) {
+            return;
+        }
+
+        if (!this.tracks.contains(track)) {
+            this.tracks.add(track);
+            track.setAlbum(this);
+        }
     }
 }

@@ -100,21 +100,17 @@ public class MusicMetadataService {
     }
 
     public List<AlbumEntity> getOrFetchDiscography(String artistId) {
-        Optional<ArtistEntity> cachedArtist = artistRepository.findById(artistId);
+        ArtistEntity artist = getOrFetchArtist(artistId);
 
-        if (cachedArtist.isPresent()) {
-            ArtistEntity artist = cachedArtist.get();
+        // FRESH (< 7 days)
+        if (artist.isDiscographyFresh(DISCOGRAPHY_CACHE_TTL_DAYS)) {
+            return albumRepository.findAllByArtists_Id(artistId);
+        }
 
-            // FRESH (< 7 days)
-            if (artist.isDiscographyFresh(DISCOGRAPHY_CACHE_TTL_DAYS)) {
-                return albumRepository.findAllByArtists_Id(artistId);
-            }
-
-            // STALE (7–14 days)
-            if (artist.isDiscographyFresh(DISCOGRAPHY_CACHE_EXPIRED_DAYS)) {
-                musicFetchService.refreshDiscographyInBackground(artistId);
-                return albumRepository.findAllByArtists_Id(artistId);
-            }
+        // STALE (7–14 days)
+        if (artist.isDiscographyFresh(DISCOGRAPHY_CACHE_EXPIRED_DAYS)) {
+            musicFetchService.refreshDiscographyInBackground(artistId);
+            return albumRepository.findAllByArtists_Id(artistId);
         }
 
         // EXPIRED or no artist

@@ -94,7 +94,6 @@ public class MusicCacheService {
                 .orElseThrow(() -> new MusicItemNotFoundException("Artist not found for discography update"));
 
         artist.setDiscographyLastUpdated(LocalDateTime.now());
-        artistRepository.save(artist);
 
         List<AlbumEntity> cachedAlbums = new ArrayList<>();
 
@@ -103,16 +102,16 @@ public class MusicCacheService {
                     .map(existingAlbum -> {
                         // update only metadata
                         metadataMapper.updateAlbumFromResponse(albumResp, existingAlbum);
-                        return albumRepository.save(existingAlbum);
+                        return existingAlbum;
                     })
                     .orElseGet(() -> {
                         // add new album with only metadata
                         AlbumEntity newAlbum = metadataMapper.toEntity(albumResp);
                         newAlbum.setLastUpdated(LocalDateTime.now().minusDays(CACHE_TTL_DAYS + 1));
-                        return albumRepository.save(newAlbum);
+                        return newAlbum;
                     });
 
-            cachedAlbums.add(album);
+            cachedAlbums.add(albumRepository.save(album));
         }
 
         return cachedAlbums;

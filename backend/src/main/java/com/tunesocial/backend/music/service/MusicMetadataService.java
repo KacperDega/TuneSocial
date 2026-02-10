@@ -51,12 +51,23 @@ public class MusicMetadataService {
     }
 
     public AlbumEntity getOrFetchAlbum(String albumId) {
-        return albumRepository.findById(albumId)
-                .filter(albumEntity -> albumEntity.isFresh(CACHE_TTL_DAYS))
-                .orElseGet(() -> {
-                    AlbumSummaryResponse albumResp = musicFetchService.fetchAlbum(albumId);
-                    List<TrackResponse> trackList = musicFetchService.fetchTracklist(albumId);
-                    return musicCacheService.cacheAlbumWithTracks(albumResp, trackList);
-                });
+        Optional<AlbumEntity> cachedAlbum = albumRepository.findById(albumId);
+
+        if (cachedAlbum.isPresent()) {
+            AlbumEntity album = cachedAlbum.get();
+
+            if (album.isFresh(CACHE_TTL_DAYS)) {
+                return album;
+            }
+
+            if (album.isFresh(CACHE_EXPIRED_DAYS)) {
+                musicFetchService.refreshAlbumInBackground(albumId);
+                return album;
+            }
+        }
+
+        AlbumSummaryResponse albumResp = musicFetchService.fetchAlbum(albumId);
+        List<TrackResponse> trackList = musicFetchService.fetchTracklist(albumId);
+        return musicCacheService.cacheAlbumWithTracks(albumResp, trackList);
     }
 }

@@ -27,7 +27,7 @@ public class MusicMetadataService {
     @Value("${app.cache.ttl-days}")
     private int CACHE_TTL_DAYS;
 
-    @Value("${app.cache.expired-days)")
+    @Value("${app.cache.expired-days}")
     private int CACHE_EXPIRED_DAYS;
 
     public TrackEntity getOrFetchTrack(String trackId) {

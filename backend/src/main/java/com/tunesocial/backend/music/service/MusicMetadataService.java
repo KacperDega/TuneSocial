@@ -1,10 +1,11 @@
 package com.tunesocial.backend.music.service;
 
 import com.tunesocial.backend.music.model.AlbumEntity;
+import com.tunesocial.backend.music.model.ArtistEntity;
 import com.tunesocial.backend.music.model.TrackEntity;
 import com.tunesocial.backend.music.dto.*;
-import com.tunesocial.backend.music.provider.MusicDataProvider;
 import com.tunesocial.backend.music.repository.AlbumRepository;
+import com.tunesocial.backend.music.repository.ArtistRepository;
 import com.tunesocial.backend.music.repository.TrackRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,6 +24,7 @@ public class MusicMetadataService {
     private final AlbumRepository albumRepository;
     private final MusicCacheService musicCacheService;
     private final MusicFetchService musicFetchService;
+    private final ArtistRepository artistRepository;
 
     @Value("${app.cache.ttl-days}")
     private int CACHE_TTL_DAYS;
@@ -69,5 +71,25 @@ public class MusicMetadataService {
         AlbumSummaryResponse albumResp = musicFetchService.fetchAlbum(albumId);
         List<TrackResponse> trackList = musicFetchService.fetchTracklist(albumId);
         return musicCacheService.cacheAlbumWithTracks(albumResp, trackList);
+    }
+
+    public ArtistEntity getOrFetchArtist(String artistId) {
+        Optional<ArtistEntity> cachedArtist = artistRepository.findById(artistId);
+
+        if (cachedArtist.isPresent()) {
+            ArtistEntity artist = cachedArtist.get();
+
+            if (artist.isFresh(CACHE_TTL_DAYS)) {
+                return artist;
+            }
+
+            if (artist.isFresh(CACHE_EXPIRED_DAYS)) {
+                musicFetchService.refreshArtistInBackground(artistId);
+                return artist;
+            }
+        }
+
+        ArtistResponse response = musicFetchService.fetchArtist(artistId);
+        return musicCacheService.cacheArtist(response);
     }
 }

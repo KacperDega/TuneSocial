@@ -1,7 +1,9 @@
 package com.tunesocial.backend.music.mapper;
 
+import com.tunesocial.backend.music.dto.ArtistResponse;
 import com.tunesocial.backend.music.model.AlbumEntity;
 import com.tunesocial.backend.music.dto.AlbumSummaryResponse;
+import com.tunesocial.backend.music.model.ArtistEntity;
 import com.tunesocial.backend.music.model.TrackEntity;
 import com.tunesocial.backend.music.dto.TrackResponse;
 import org.mapstruct.Mapper;
@@ -37,4 +39,12 @@ public interface MetadataMapper {
     @Mapping(target = "tracks", ignore = true)
     @Mapping(target = "lastUpdated", ignore = true)
     void updateAlbumFromResponse(AlbumSummaryResponse response, @MappingTarget AlbumEntity entity);
+
+
+    // ARTIST
+    ArtistEntity toEntity(ArtistResponse response);
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "lastUpdated", ignore = true)
+    void updateArtistFromResponse(ArtistResponse response, @MappingTarget ArtistEntity entity);
 }

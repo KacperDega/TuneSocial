@@ -1,6 +1,7 @@
 package com.tunesocial.backend.music.service;
 
 import com.tunesocial.backend.music.dto.AlbumSummaryResponse;
+import com.tunesocial.backend.music.dto.ArtistResponse;
 import com.tunesocial.backend.music.dto.TrackResponse;
 import com.tunesocial.backend.music.provider.MusicDataProvider;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +32,10 @@ public class MusicFetchService {
         return musicDataProvider.getTrackList(albumId);
     }
 
+    public ArtistResponse fetchArtist(String artistId) {
+        return musicDataProvider.getArtist(artistId);
+    }
+
     @Async
     @Transactional
     public void refreshTrackInBackground(String trackId) {
@@ -56,6 +61,20 @@ public class MusicFetchService {
             log.debug("Background refresh success for album: {}", albumId);
         } catch (Exception e) {
             log.error("Background refresh failed for album: {}. Cause: {}", albumId, e.getMessage());
+        }
+    }
+
+    @Async
+    @Transactional
+    public void refreshArtistInBackground(String artistId) {
+        try {
+            log.debug("Starting background refresh for artist: {}", artistId);
+            ArtistResponse response = fetchArtist(artistId);
+
+            musicCacheService.cacheArtist(response);
+            log.debug("Background refresh success for artist: {}", artistId);
+        } catch (Exception e) {
+            log.error("Background refresh failed for artist {}. Cause: {}", artistId, e.getMessage());
         }
     }
 }

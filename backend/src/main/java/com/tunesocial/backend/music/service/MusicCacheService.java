@@ -1,11 +1,13 @@
 package com.tunesocial.backend.music.service;
 
 import com.tunesocial.backend.music.model.AlbumEntity;
+import com.tunesocial.backend.music.model.ArtistEntity;
 import com.tunesocial.backend.music.model.TrackEntity;
 import com.tunesocial.backend.music.dto.*;
 import com.tunesocial.backend.music.mapper.MetadataMapper;
 import com.tunesocial.backend.music.provider.MusicDataProvider;
 import com.tunesocial.backend.music.repository.AlbumRepository;
+import com.tunesocial.backend.music.repository.ArtistRepository;
 import com.tunesocial.backend.music.repository.TrackRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +27,7 @@ public class MusicCacheService {
     private final TrackRepository trackRepository;
     private final AlbumRepository albumRepository;
     private final MetadataMapper metadataMapper;
+    private final ArtistRepository artistRepository;
 
     @Value("${app.cache.ttl-days}")
     private int CACHE_TTL_DAYS;
@@ -70,5 +73,16 @@ public class MusicCacheService {
         stub.setTitle(ref.name());
         stub.setLastUpdated(LocalDateTime.now().minusDays(CACHE_TTL_DAYS + 1));
         return albumRepository.save(stub);
+    }
+
+    @Transactional
+    public ArtistEntity cacheArtist(ArtistResponse response) {
+        ArtistEntity entity = artistRepository.findById(response.id())
+                .orElseGet(() -> metadataMapper.toEntity(response));
+
+        metadataMapper.updateArtistFromResponse(response, entity);
+        entity.setLastUpdated(LocalDateTime.now());
+
+        return artistRepository.save(entity);
     }
 }

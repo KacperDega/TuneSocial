@@ -1,5 +1,6 @@
 package com.tunesocial.backend.music.service;
 
+import com.tunesocial.backend.music.exception.MusicItemNotFoundException;
 import com.tunesocial.backend.music.model.AlbumEntity;
 import com.tunesocial.backend.music.model.ArtistEntity;
 import com.tunesocial.backend.music.model.TrackEntity;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -84,5 +86,35 @@ public class MusicCacheService {
         entity.setLastUpdated(LocalDateTime.now());
 
         return artistRepository.save(entity);
+    }
+
+    @Transactional
+    public List<AlbumEntity> cacheDiscography(String artistId, List<AlbumSummaryResponse> discography) {
+        ArtistEntity artist = artistRepository.findById(artistId)
+                .orElseThrow(() -> new MusicItemNotFoundException("Artist not found for discography update"));
+
+        artist.setDiscographyLastUpdated(LocalDateTime.now());
+        artistRepository.save(artist);
+
+        List<AlbumEntity> cachedAlbums = new ArrayList<>();
+
+        for (AlbumSummaryResponse albumResp : discography) {
+            AlbumEntity album = albumRepository.findById(albumResp.id())
+                    .map(existingAlbum -> {
+                        // update only metadata
+                        metadataMapper.updateAlbumFromResponse(albumResp, existingAlbum);
+                        return albumRepository.save(existingAlbum);
+                    })
+                    .orElseGet(() -> {
+                        // add new album with only metadata
+                        AlbumEntity newAlbum = metadataMapper.toEntity(albumResp);
+                        newAlbum.setLastUpdated(LocalDateTime.now().minusDays(CACHE_TTL_DAYS + 1));
+                        return albumRepository.save(newAlbum);
+                    });
+
+            cachedAlbums.add(album);
+        }
+
+        return cachedAlbums;
     }
 }

@@ -6,3 +6,6 @@ app:
   cache:
     ttl-days: 30
     expired-days: 60
+
+    discography-ttl-days: 7
+    discography-expired-days: 14

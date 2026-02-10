@@ -32,6 +32,12 @@ public class MusicMetadataService {
     @Value("${app.cache.expired-days}")
     private int CACHE_EXPIRED_DAYS;
 
+    @Value("${app.cache.discography-ttl-days}")
+    private int DISCOGRAPHY_CACHE_TTL_DAYS;
+
+    @Value("${app.cache.discography-expired-days}")
+    private int DISCOGRAPHY_CACHE_EXPIRED_DAYS;
+
     public TrackEntity getOrFetchTrack(String trackId) {
         Optional<TrackEntity> cachedTrack = trackRepository.findById(trackId);
 
@@ -91,5 +97,29 @@ public class MusicMetadataService {
 
         ArtistResponse response = musicFetchService.fetchArtist(artistId);
         return musicCacheService.cacheArtist(response);
+    }
+
+    public List<AlbumEntity> getOrFetchDiscography(String artistId) {
+        Optional<ArtistEntity> cachedArtist = artistRepository.findById(artistId);
+
+        if (cachedArtist.isPresent()) {
+            ArtistEntity artist = cachedArtist.get();
+
+            // FRESH (< 7 days)
+            if (artist.isDiscographyFresh(DISCOGRAPHY_CACHE_TTL_DAYS)) {
+                return albumRepository.findAllByArtists_Id(artistId);
+            }
+
+            // STALE (7–14 days)
+            if (artist.isDiscographyFresh(DISCOGRAPHY_CACHE_EXPIRED_DAYS)) {
+                musicFetchService.refreshDiscographyInBackground(artistId);
+                return albumRepository.findAllByArtists_Id(artistId);
+            }
+        }
+
+        // EXPIRED or no artist
+        List<AlbumSummaryResponse> discography = musicFetchService.fetchDiscography(artistId);
+
+        return musicCacheService.cacheDiscography(artistId, discography);
     }
 }

@@ -19,4 +19,9 @@ public class ArtistEntity implements CacheableEntity {
     private String description;
 
     private LocalDateTime lastUpdated;
+    private LocalDateTime discographyLastUpdated;
+
+    public boolean isDiscographyFresh(int days) {
+        return discographyLastUpdated != null && discographyLastUpdated.isAfter(LocalDateTime.now().minusDays(days));
+    }
 }

@@ -46,5 +46,6 @@ public interface MetadataMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "lastUpdated", ignore = true)
+    @Mapping(target = "discographyLastUpdated", ignore = true)
     void updateArtistFromResponse(ArtistResponse response, @MappingTarget ArtistEntity entity);
 }

@@ -36,6 +36,10 @@ public class MusicFetchService {
         return musicDataProvider.getArtist(artistId);
     }
 
+    public List<AlbumSummaryResponse> fetchDiscography(String artistId) {
+        return musicDataProvider.getDiscography(artistId);
+    }
+
     @Async
     @Transactional
     public void refreshTrackInBackground(String trackId) {
@@ -75,6 +79,20 @@ public class MusicFetchService {
             log.debug("Background refresh success for artist: {}", artistId);
         } catch (Exception e) {
             log.error("Background refresh failed for artist {}. Cause: {}", artistId, e.getMessage());
+        }
+    }
+
+    @Async
+    @Transactional
+    public void refreshDiscographyInBackground(String artistId) {
+        try {
+            log.debug("Starting background refresh discography for artist: {}", artistId);
+            List<AlbumSummaryResponse> discography = musicDataProvider.getDiscography(artistId);
+
+            musicCacheService.cacheDiscography(artistId, discography);
+            log.debug("Background refresh success for discography for artist: {}", artistId);
+        } catch (Exception e) {
+            log.error("Background refresh failed for discography for artist {}: {}", artistId, e.getMessage());
         }
     }
 }

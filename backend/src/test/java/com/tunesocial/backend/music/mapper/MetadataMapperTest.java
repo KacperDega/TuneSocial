@@ -17,7 +17,7 @@ class MetadataMapperTest {
 
     @Test
     @DisplayName("Should map TrackResponse to TrackEntity (ignoring album and date)")
-    void shouldMapTrackResponseToEntity() {
+    void shouldMapTrackResponseToTrackEntity() {
         // Given
         ArtistRefDto artist = new ArtistRefDto("654321", "Artist Name");
         AlbumRefDto albumRef = new AlbumRefDto("111111", "Album Name");
@@ -33,7 +33,7 @@ class MetadataMapperTest {
         );
 
         // When
-        TrackEntity entity = mapper.toEntity(response);
+        TrackEntity entity = mapper.toTrackEntity(response);
 
         // Then
         assertEquals("123456", entity.getId());
@@ -41,14 +41,14 @@ class MetadataMapperTest {
         assertEquals(1, entity.getArtists().size());
         assertEquals("Artist Name", entity.getArtists().get(0).name());
 
-        // Te pola powinny być zignorowane zgodnie z naszą adnotacją @Mapping(ignore = true)
+        // ignored by @Mapping(ignore = true)
         assertNull(entity.getAlbum());
         assertNull(entity.getLastUpdated());
     }
 
     @Test
     @DisplayName("Should update existing entity with data from DTO")
-    void shouldUpdateEntityFromResponse() {
+    void shouldUpdateTrackEntityFromResponse() {
         // Given
         TrackEntity existingEntity = new TrackEntity();
         existingEntity.setId("123456");
@@ -68,7 +68,7 @@ class MetadataMapperTest {
 
     @Test
     @DisplayName("Should map TrackEntity to TrackResponse with AlbumRefDto conversion")
-    void shouldMapEntityToTrackResponseWithAlbumRef() {
+    void shouldMapTrackEntityToTrackResponseWithAlbumRef() {
         // Given
         AlbumEntity album = new AlbumEntity();
         album.setId("111111");
@@ -93,7 +93,7 @@ class MetadataMapperTest {
 
     @Test
     @DisplayName("Should map TrackEntity to TrackResponse when album is null")
-    void shouldMapEntityToTrackResponseWhenAlbumIsNull() {
+    void shouldMapTrackEntityToTrackResponseWhenAlbumIsNull() {
         // Given
         TrackEntity entity = new TrackEntity();
         entity.setId("123456");
@@ -108,7 +108,6 @@ class MetadataMapperTest {
         assertEquals("123456", response.id());
         assertEquals("Track Name", response.title());
 
-        // Kluczowa weryfikacja
         assertNull(response.album(), "AlbumRefDto should be null for tracks not belonging to any album");
     }
 }

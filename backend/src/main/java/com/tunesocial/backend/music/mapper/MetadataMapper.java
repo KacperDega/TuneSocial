@@ -18,7 +18,7 @@ public interface MetadataMapper {
     // ignore album on purpose, handle it in service
     @Mapping(target = "album", ignore = true)
     @Mapping(target = "lastUpdated", ignore = true)
-    TrackEntity toEntity(TrackResponse response);
+    TrackEntity toTrackEntity(TrackResponse response);
 
     @Mapping(target = "album.id", source = "entity.album.id")
     @Mapping(target = "album.name", source = "entity.album.title")
@@ -33,7 +33,7 @@ public interface MetadataMapper {
     // ALBUM
     @Mapping(target = "tracks", ignore = true)
     @Mapping(target = "lastUpdated", ignore = true)
-    AlbumEntity toEntity(AlbumSummaryResponse response);
+    AlbumEntity toAlbumEntity(AlbumSummaryResponse response);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "tracks", ignore = true)
@@ -42,7 +42,7 @@ public interface MetadataMapper {
 
 
     // ARTIST
-    ArtistEntity toEntity(ArtistResponse response);
+    ArtistEntity toArtistEntity(ArtistResponse response);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "lastUpdated", ignore = true)

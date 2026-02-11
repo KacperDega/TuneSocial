@@ -45,7 +45,7 @@ class MusicCacheServiceTest {
 
         when(albumRepository.findById(albumId)).thenReturn(Optional.of(existingAlbum));
         when(trackRepository.findById("t1")).thenReturn(Optional.empty());
-        when(metadataMapper.toEntity(any(TrackResponse.class))).thenReturn(new TrackEntity());
+        when(metadataMapper.toTrackEntity(any(TrackResponse.class))).thenReturn(new TrackEntity());
 
         // When
         musicCacheService.cacheAlbumWithTracks(albumResp, List.of(trackResp));

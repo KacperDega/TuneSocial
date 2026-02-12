@@ -1,13 +1,20 @@
 package com.tunesocial.backend.music.service;
 
+import com.tunesocial.backend.music.dto.AlbumSummaryResponse;
+import com.tunesocial.backend.music.dto.ArtistResponse;
 import com.tunesocial.backend.music.dto.TrackResponse;
+import com.tunesocial.backend.music.model.AlbumEntity;
+import com.tunesocial.backend.music.model.ArtistEntity;
 import com.tunesocial.backend.music.model.TrackEntity;
+import com.tunesocial.backend.music.repository.AlbumRepository;
+import com.tunesocial.backend.music.repository.ArtistRepository;
 import com.tunesocial.backend.music.repository.TrackRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -27,6 +34,8 @@ class MusicMetadataServiceTest {
     @Mock private TrackRepository trackRepository;
     @Mock private MusicFetchService musicFetchService;
     @Mock private MusicCacheService musicCacheService;
+    @Mock private AlbumRepository albumRepository;
+    @Mock private ArtistRepository artistRepository;
 
     @InjectMocks private MusicMetadataService musicMetadataService;
 
@@ -34,6 +43,8 @@ class MusicMetadataServiceTest {
     void setUp() {
         ReflectionTestUtils.setField(musicMetadataService, "CACHE_TTL_DAYS", 30);
         ReflectionTestUtils.setField(musicMetadataService, "CACHE_EXPIRED_DAYS", 60);
+        ReflectionTestUtils.setField(musicMetadataService, "DISCOGRAPHY_CACHE_TTL_DAYS", 7);
+        ReflectionTestUtils.setField(musicMetadataService, "DISCOGRAPHY_CACHE_EXPIRED_DAYS", 14);
     }
 
     @Nested
@@ -94,17 +105,162 @@ class MusicMetadataServiceTest {
 
     }
 
-    private TrackEntity createTrackWithDate(String id, LocalDateTime date) {
+
+    @Nested
+    class GetOrFetchAlbum {
+        @Test
+        @DisplayName("Should return fresh album from cache")
+        void shouldReturnFreshAlbum() {
+
+            // Given
+            String id = "alb1";
+            AlbumEntity freshAlbum = createAlbum(id, LocalDateTime.now().minusDays(5));
+            when(albumRepository.findById(id)).thenReturn(Optional.of(freshAlbum));
+
+            // When
+            AlbumEntity result = musicMetadataService.getOrFetchAlbum(id);
+
+            // Then
+            assertThat(result).isEqualTo(freshAlbum);
+            verifyNoInteractions(musicFetchService, musicCacheService);
+        }
+
+        @Test
+        @DisplayName("Should fetch and cache when album is missing")
+        void shouldFetchAndCacheNewAlbum() {
+
+            // Given
+            String id = "alb1";
+            AlbumSummaryResponse resp = new AlbumSummaryResponse(id, "Title", List.of(), "url", "2024");
+            List<TrackResponse> tracks = List.of();
+
+            when(albumRepository.findById(id)).thenReturn(Optional.empty());
+            when(musicFetchService.fetchAlbum(id)).thenReturn(resp);
+            when(musicFetchService.fetchTracklist(id)).thenReturn(tracks);
+
+            // When
+            musicMetadataService.getOrFetchAlbum(id);
+
+            // Then
+            verify(musicCacheService).cacheAlbumWithTracks(resp, tracks);
+        }
+    }
+
+    @Nested
+    class GetOrFetchArtist {
+
+        @Test
+        @DisplayName("Should return stale artist and trigger async refresh")
+        void shouldReturnStaleArtist() {
+
+            // Given
+            String id = "art1";
+            ArtistEntity staleArtist = createArtist(id, LocalDateTime.now().minusDays(45));
+            when(artistRepository.findById(id)).thenReturn(Optional.of(staleArtist));
+
+            // When
+            ArtistEntity result = musicMetadataService.getOrFetchArtist(id);
+
+            // Then
+            assertThat(result).isEqualTo(staleArtist);
+            verify(musicFetchService).refreshArtistInBackground(id);
+        }
+    }
+
+    @Nested
+    class GetOrFetchDiscography {
+
+        @Test
+        @DisplayName("When discography is fresh - return from DB using artistId")
+        void shouldReturnFreshDiscography() {
+
+            // Given
+            String artId = "art1";
+            ArtistEntity artist = createArtist(artId, LocalDateTime.now());
+            artist.setDiscographyLastUpdated(LocalDateTime.now().minusDays(2));
+
+            when(artistRepository.findById(artId)).thenReturn(Optional.of(artist));
+
+            // When
+            musicMetadataService.getOrFetchDiscography(artId);
+
+            // Then
+            verify(albumRepository).findAllByArtists_Id(artId);
+            verifyNoInteractions(musicFetchService, musicCacheService);
+        }
+
+        @Test
+        @DisplayName("When discography is expired - fetch from API and cache")
+        void shouldFetchAndCacheExpiredDiscography() {
+
+            // Given
+            String artId = "art1";
+            ArtistEntity artist = createArtist(artId, LocalDateTime.now());
+            artist.setDiscographyLastUpdated(LocalDateTime.now().minusDays(20));
+
+            List<AlbumSummaryResponse> discographyResp = List.of();
+            when(artistRepository.findById(artId)).thenReturn(Optional.of(artist));
+            when(musicFetchService.fetchDiscography(artId)).thenReturn(discographyResp);
+
+            // When
+            musicMetadataService.getOrFetchDiscography(artId);
+
+            // Then
+            verify(musicCacheService).cacheDiscography(artId, discographyResp);
+        }
+
+        @Test
+        @DisplayName("When artist missing - should first fetch artist then discography")
+        void shouldFetchArtistBeforeDiscographyIfMissing() {
+            // Given
+            String artId = "art1";
+            ArtistResponse artResp = new ArtistResponse(artId, "Name", "url", "desc");
+            ArtistEntity artEntity = createArtist(artId, LocalDateTime.now());
+
+            when(artistRepository.findById(artId)).thenReturn(Optional.empty());
+            when(musicFetchService.fetchArtist(artId)).thenReturn(artResp);
+            when(musicCacheService.cacheArtist(artResp)).thenReturn(artEntity);
+
+            when(musicFetchService.fetchDiscography(artId)).thenReturn(List.of());
+
+            // When
+            musicMetadataService.getOrFetchDiscography(artId);
+
+            // Then
+            InOrder inOrder = inOrder(musicFetchService, musicCacheService);
+            inOrder.verify(musicFetchService).fetchArtist(artId);
+            inOrder.verify(musicCacheService).cacheArtist(artResp);
+            inOrder.verify(musicFetchService).fetchDiscography(artId);
+        }
+
+    }
+
+    private TrackEntity createTrackWithDate(String id, LocalDateTime lastUpdated) {
         TrackEntity track = new TrackEntity();
         track.setId(id);
         track.setTitle("Test Track");
         track.setImageUrl(null);
         track.setReleaseDate("2020-01-01");
-        track.setLastUpdated(date);
+        track.setLastUpdated(lastUpdated);
 
         track.setArtists(List.of());
         track.setLinks(List.of());
 
         return track;
     }
+
+    private AlbumEntity createAlbum(String id, LocalDateTime lastUpdated) {
+        AlbumEntity album = new AlbumEntity();
+        album.setId(id);
+        album.setLastUpdated(lastUpdated);
+        return album;
+    }
+
+    private ArtistEntity createArtist(String id, LocalDateTime lastUpdated) {
+        ArtistEntity artist = new ArtistEntity();
+        artist.setId(id);
+        artist.setLastUpdated(lastUpdated);
+        return artist;
+    }
+
 }

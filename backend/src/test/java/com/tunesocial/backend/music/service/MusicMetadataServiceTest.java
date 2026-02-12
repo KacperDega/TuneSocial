@@ -5,6 +5,7 @@ import com.tunesocial.backend.music.model.TrackEntity;
 import com.tunesocial.backend.music.repository.TrackRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -35,57 +36,62 @@ class MusicMetadataServiceTest {
         ReflectionTestUtils.setField(musicMetadataService, "CACHE_EXPIRED_DAYS", 60);
     }
 
-    @Test
-    @DisplayName("When track is fresh (track < ttl) - return it and do nothing else")
-    void shouldReturnCachedTrackWhenFresh() {
-        // Given
-        String id = "t1";
-        TrackEntity freshTrack = createTrackWithDate(id, LocalDateTime.now().minusDays(5));
-        when(trackRepository.findById(id)).thenReturn(Optional.of(freshTrack));
+    @Nested
+    class getOrFetchTrack {
 
-        // When
-        TrackEntity result = musicMetadataService.getOrFetchTrack(id);
+        @Test
+        @DisplayName("When track is fresh (track < ttl) - return it and do nothing else")
+        void shouldReturnCachedTrackWhenFresh() {
+            // Given
+            String id = "t1";
+            TrackEntity freshTrack = createTrackWithDate(id, LocalDateTime.now().minusDays(5));
+            when(trackRepository.findById(id)).thenReturn(Optional.of(freshTrack));
 
-        // Then
-        assertThat(result).isEqualTo(freshTrack);
-        verifyNoInteractions(musicFetchService, musicCacheService);
-    }
+            // When
+            TrackEntity result = musicMetadataService.getOrFetchTrack(id);
 
-    @Test
-    @DisplayName("When track is stale (ttl < track < expired) - return it and refresh in background")
-    void shouldReturnCachedTrackAndTriggerBackgroundRefreshWhenStale() {
-        // Given
-        String id = "t1";
-        TrackEntity staleTrack = createTrackWithDate(id, LocalDateTime.now().minusDays(45));
-        when(trackRepository.findById(id)).thenReturn(Optional.of(staleTrack));
+            // Then
+            assertThat(result).isEqualTo(freshTrack);
+            verifyNoInteractions(musicFetchService, musicCacheService);
+        }
 
-        // When
-        TrackEntity result = musicMetadataService.getOrFetchTrack(id);
+        @Test
+        @DisplayName("When track is stale (ttl < track < expired) - return it and refresh in background")
+        void shouldReturnCachedTrackAndTriggerBackgroundRefreshWhenStale() {
+            // Given
+            String id = "t1";
+            TrackEntity staleTrack = createTrackWithDate(id, LocalDateTime.now().minusDays(45));
+            when(trackRepository.findById(id)).thenReturn(Optional.of(staleTrack));
 
-        // Then
-        assertThat(result).isEqualTo(staleTrack);
-        verify(musicFetchService).refreshTrackInBackground(id);
-        verify(musicFetchService, never()).fetchTrack(anyString());
-    }
+            // When
+            TrackEntity result = musicMetadataService.getOrFetchTrack(id);
 
-    @Test
-    @DisplayName("When track is expired (expired < track) - refresh it and then return")
-    void shouldFetchAndCacheWhenTrackExpired() {
-        // Given
-        String id = "t1";
-        TrackEntity expiredTrack = createTrackWithDate(id, LocalDateTime.now().minusDays(70));
-        TrackResponse response = new TrackResponse(id, "Title", null, null, "2024", List.of(), List.of());
+            // Then
+            assertThat(result).isEqualTo(staleTrack);
+            verify(musicFetchService).refreshTrackInBackground(id);
+            verify(musicFetchService, never()).fetchTrack(anyString());
+        }
 
-        when(trackRepository.findById(id)).thenReturn(Optional.of(expiredTrack));
-        when(musicFetchService.fetchTrack(id)).thenReturn(response);
-        when(musicCacheService.cacheTrack(response)).thenReturn(new TrackEntity());
+        @Test
+        @DisplayName("When track is expired (expired < track) - refresh it and then return")
+        void shouldFetchAndCacheWhenTrackExpired() {
+            // Given
+            String id = "t1";
+            TrackEntity expiredTrack = createTrackWithDate(id, LocalDateTime.now().minusDays(70));
+            TrackResponse response = new TrackResponse(id, "Title", null, null, "2024", List.of(), List.of());
 
-        // When
-        musicMetadataService.getOrFetchTrack(id);
+            when(trackRepository.findById(id)).thenReturn(Optional.of(expiredTrack));
+            when(musicFetchService.fetchTrack(id)).thenReturn(response);
+            when(musicCacheService.cacheTrack(response)).thenReturn(new TrackEntity());
 
-        // Then
-        verify(musicFetchService).fetchTrack(id);
-        verify(musicCacheService).cacheTrack(response);
+            // When
+            musicMetadataService.getOrFetchTrack(id);
+
+            // Then
+            verify(musicFetchService).fetchTrack(id);
+            verify(musicCacheService).cacheTrack(response);
+        }
+
     }
 
     private TrackEntity createTrackWithDate(String id, LocalDateTime date) {

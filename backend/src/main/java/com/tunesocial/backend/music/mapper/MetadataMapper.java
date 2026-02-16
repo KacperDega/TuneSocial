@@ -10,6 +10,8 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
+import java.util.List;
+
 @Mapper(componentModel = "spring")
 public interface MetadataMapper {
 
@@ -35,6 +37,10 @@ public interface MetadataMapper {
     @Mapping(target = "lastUpdated", ignore = true)
     AlbumEntity toAlbumEntity(AlbumSummaryResponse response);
 
+    AlbumSummaryResponse toAlbumResponse(AlbumEntity entity);
+
+    List<AlbumSummaryResponse> toAlbumResponseList(List<AlbumEntity> entities);
+
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "tracks", ignore = true)
     @Mapping(target = "lastUpdated", ignore = true)
@@ -43,6 +49,8 @@ public interface MetadataMapper {
 
     // ARTIST
     ArtistEntity toArtistEntity(ArtistResponse response);
+
+    ArtistResponse toArtistResponse(ArtistEntity entity);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "lastUpdated", ignore = true)

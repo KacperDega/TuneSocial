@@ -86,6 +86,32 @@ public class MusicMetadataService {
         return trackMap;
     }
 
+    @Transactional
+    public Map<String, AlbumEntity> getOrFetchAlbums(List<String> albumIds) {
+        List<AlbumEntity> existingAlbums = albumRepository.findAllById(albumIds);
+
+        Map<String, AlbumEntity> albumMap = existingAlbums.stream()
+                .collect(Collectors.toMap(AlbumEntity::getId, a -> a));
+
+        for (String id : albumIds) {
+            AlbumEntity album = albumMap.get(id);
+
+            if (album == null || !album.isFresh(CACHE_EXPIRED_DAYS)) {
+                // expired - refresh then return
+                // TODO: sprobowac rozdzielci na threadsy
+                log.info("Ranking needs fresh data for album: {}", id);
+                AlbumSummaryResponse albumResp = musicFetchService.fetchAlbum(id);
+                List<TrackResponse> trackList = musicFetchService.fetchTracklist(id);
+
+                albumMap.put(id, musicCacheService.cacheAlbumWithTracks(albumResp, trackList));
+            } else if (!album.isFresh(CACHE_TTL_DAYS)) {
+                // stale - return + async refresh
+                musicFetchService.refreshAlbumInBackground(id);
+            }
+        }
+        return albumMap;
+    }
+
     public AlbumEntity getOrFetchAlbum(String albumId) {
         Optional<AlbumEntity> cachedAlbum = albumRepository.findById(albumId);
 

@@ -30,16 +30,16 @@ public class MusicMetadataService {
     private final MusicFetchService musicFetchService;
     private final ArtistRepository artistRepository;
 
-    @Value("${app.cache.ttl-days}")
+    @Value("${app.cache.ttl-days:30}")
     private int CACHE_TTL_DAYS;
 
-    @Value("${app.cache.expired-days}")
+    @Value("${app.cache.expired-days:60}")
     private int CACHE_EXPIRED_DAYS;
 
-    @Value("${app.cache.discography-ttl-days}")
+    @Value("${app.cache.discography-ttl-days:7}")
     private int DISCOGRAPHY_CACHE_TTL_DAYS;
 
-    @Value("${app.cache.discography-expired-days}")
+    @Value("${app.cache.discography-expired-days:14}")
     private int DISCOGRAPHY_CACHE_EXPIRED_DAYS;
 
     public TrackEntity getOrFetchTrack(String trackId) {

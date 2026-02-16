@@ -1,8 +1,10 @@
 package com.tunesocial.backend.music.service;
 
 import com.tunesocial.backend.music.dto.*;
-import com.tunesocial.backend.music.provider.MusicDataProvider;
-import com.tunesocial.backend.rating.model.Rating;
+import com.tunesocial.backend.music.mapper.MetadataMapper;
+import com.tunesocial.backend.music.model.AlbumEntity;
+import com.tunesocial.backend.music.model.ArtistEntity;
+import com.tunesocial.backend.music.model.TrackEntity;
 import com.tunesocial.backend.rating.model.RatingSummary;
 import com.tunesocial.backend.rating.model.RatingTargetType;
 import com.tunesocial.backend.rating.service.RatingService;
@@ -16,33 +18,43 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MusicService {
 
-    private final MusicDataProvider provider;
+    private final MusicMetadataService metadataService;
     private final RatingService ratingService;
+    private final MetadataMapper mapper;
 
     public TrackResponse getTrack(String trackId) {
-        return provider.getTrack(trackId);
+        TrackEntity entity = metadataService.getOrFetchTrack(trackId);
+        return mapper.toTrackResponse(entity);
     }
 
     public AlbumSummaryResponse getAlbum(String albumId) {
-        return provider.getAlbum(albumId);
+        AlbumEntity entity = metadataService.getOrFetchAlbum(albumId);
+        return mapper.toAlbumResponse(entity);
     }
 
     public ArtistResponse getArtist(String artistId) {
-        return provider.getArtist(artistId);
+        ArtistEntity entity = metadataService.getOrFetchArtist(artistId);
+        return mapper.toArtistResponse(entity);
     }
 
     public List<AlbumSummaryResponse> getDiscography(String artistId) {
-        return provider.getDiscography(artistId);
+        List<AlbumEntity> entities = metadataService.getOrFetchDiscography(artistId);
+        return mapper.toAlbumResponseList(entities);
     }
 
     public List<TrackResponse> getTracklist(String albumId) {
-        return provider.getTrackList(albumId);
+        AlbumEntity entity = metadataService.getOrFetchAlbum(albumId);
+        return entity.getTracks().stream()
+                .map(mapper::toTrackResponse)
+                .toList();
     }
+
 
     @Transactional(readOnly = true)
     public TrackDetailsResponse getTrackDetails(String trackId, Long currentUserId) {
 
-        TrackResponse track = provider.getTrack(trackId);
+        TrackEntity trackEntity = metadataService.getOrFetchTrack(trackId);
+        TrackResponse trackDto = mapper.toTrackResponse(trackEntity);
 
         RatingSummary summary =
                 ratingService.getSummaryForTarget(
@@ -57,7 +69,7 @@ public class MusicService {
         );
 
         return TrackDetailsResponse.from(
-                track,
+                trackDto,
                 summary.getRatingCount(),
                 summary.getRatingSum(),
                 userRating
@@ -67,8 +79,12 @@ public class MusicService {
     @Transactional(readOnly = true)
     public AlbumDetailsResponse getAlbumDetails(String albumId, Long currentUserId) {
 
-        AlbumSummaryResponse album = provider.getAlbum(albumId);
-        List<TrackResponse> tracks = provider.getTrackList(albumId);
+        AlbumEntity albumEntity = metadataService.getOrFetchAlbum(albumId);
+
+        AlbumSummaryResponse albumDto = mapper.toAlbumResponse(albumEntity);
+        List<TrackResponse> trackDtos = albumEntity.getTracks().stream()
+                .map(mapper::toTrackResponse)
+                .toList();
 
         RatingSummary summary =
                 ratingService.getSummaryForTarget(
@@ -83,8 +99,8 @@ public class MusicService {
         );
 
         return AlbumDetailsResponse.from(
-                album,
-                tracks,
+                albumDto,
+                trackDtos,
                 summary.getRatingCount(),
                 summary.getRatingSum(),
                 userRating

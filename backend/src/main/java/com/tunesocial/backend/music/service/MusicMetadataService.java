@@ -8,16 +8,20 @@ import com.tunesocial.backend.music.repository.AlbumRepository;
 import com.tunesocial.backend.music.repository.ArtistRepository;
 import com.tunesocial.backend.music.repository.TrackRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class MusicMetadataService {
 
     private final TrackRepository trackRepository;
@@ -56,6 +60,30 @@ public class MusicMetadataService {
 
         TrackResponse response = musicFetchService.fetchTrack(trackId);
         return musicCacheService.cacheTrack(response);
+    }
+
+    public Map<String, TrackEntity> getOrFetchTracks(List<String> trackIds) {
+        List<TrackEntity> existingTracks = trackRepository.findAllById(trackIds);
+
+        Map<String, TrackEntity> trackMap = existingTracks.stream()
+                .collect(Collectors.toMap(TrackEntity::getId, t -> t));
+
+        for (String id : trackIds) {
+            TrackEntity track = trackMap.get(id);
+
+            if (track == null || !track.isFresh(CACHE_EXPIRED_DAYS)) {
+                // expired - refresh then return
+                // TODO: sprobowac rozdzielci na threadsy
+                log.info("Ranking needs fresh data for track: {}", id);
+                TrackResponse resp = musicFetchService.fetchTrack(id);
+
+                trackMap.put(id, musicCacheService.cacheTrack(resp));
+            } else if (!track.isFresh(CACHE_TTL_DAYS)) {
+                // stale - return + async refresh
+                musicFetchService.refreshTrackInBackground(id);
+            }
+        }
+        return trackMap;
     }
 
     public AlbumEntity getOrFetchAlbum(String albumId) {

@@ -22,6 +22,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 
@@ -233,6 +234,71 @@ class MusicMetadataServiceTest {
             inOrder.verify(musicFetchService).fetchDiscography(artId);
         }
 
+    }
+
+    @Nested
+    class GetOrFetchTracks {
+
+        @Test
+        @DisplayName("Should handle mixed track states: fresh, stale, expired, and missing")
+        void shouldHandleMixedTrackStates() {
+            // Given
+            String freshId = "fresh";
+            String staleId = "stale";
+            String expiredId = "expired";
+            String missingId = "missing";
+
+            TrackEntity freshTrack = createTrackWithDate(freshId, LocalDateTime.now().minusDays(5));
+            TrackEntity staleTrack = createTrackWithDate(staleId, LocalDateTime.now().minusDays(40));
+            TrackEntity expiredTrack = createTrackWithDate(expiredId, LocalDateTime.now().minusDays(70));
+
+            List<String> ids = List.of(freshId, staleId, expiredId, missingId);
+
+            when(trackRepository.findAllById(ids))
+                    .thenReturn(List.of(freshTrack, staleTrack, expiredTrack));
+
+                // expired + missing = fetch
+            TrackResponse expiredResp = new TrackResponse(expiredId, "t", null, null, "2024", List.of(), List.of());
+            TrackResponse missingResp = new TrackResponse(missingId, "t", null, null, "2024", List.of(), List.of());
+
+            TrackEntity cachedExpired = new TrackEntity();
+            cachedExpired.setId(expiredId);
+
+            TrackEntity cachedMissing = new TrackEntity();
+            cachedMissing.setId(missingId);
+
+            when(musicFetchService.fetchTrack(expiredId)).thenReturn(expiredResp);
+            when(musicFetchService.fetchTrack(missingId)).thenReturn(missingResp);
+
+            when(musicCacheService.cacheTrack(expiredResp)).thenReturn(cachedExpired);
+            when(musicCacheService.cacheTrack(missingResp)).thenReturn(cachedMissing);
+
+            // When
+            Map<String, TrackEntity> result = musicMetadataService.getOrFetchTracks(ids);
+
+            // Then
+
+                // fresh - return
+            assertThat(result.get(freshId)).isEqualTo(freshTrack);
+
+                // stale - return but trigger async refresh
+            assertThat(result.get(staleId)).isEqualTo(staleTrack);
+            verify(musicFetchService).refreshTrackInBackground(staleId);
+
+                // expired - fetch + cache
+            assertThat(result.get(expiredId)).isEqualTo(cachedExpired);
+            verify(musicFetchService).fetchTrack(expiredId);
+            verify(musicCacheService).cacheTrack(expiredResp);
+
+                // missing -> fetch + cache
+            assertThat(result.get(missingId)).isEqualTo(cachedMissing);
+            verify(musicFetchService).fetchTrack(missingId);
+            verify(musicCacheService).cacheTrack(missingResp);
+
+                // fresh should not trigger anything
+            verify(musicFetchService, never()).refreshTrackInBackground(freshId);
+            verify(musicFetchService, never()).fetchTrack(freshId);
+        }
     }
 
     private TrackEntity createTrackWithDate(String id, LocalDateTime lastUpdated) {

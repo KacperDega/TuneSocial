@@ -8,6 +8,7 @@ import com.tunesocial.backend.rating.model.RatingSummary;
 import com.tunesocial.backend.rating.model.RatingTargetType;
 import com.tunesocial.backend.rating.repository.RatingRepository;
 import com.tunesocial.backend.rating.repository.RatingSummaryRepository;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
@@ -137,5 +138,14 @@ public class RatingService {
                 .findByUserIdAndTargetIdAndTargetType(userId, targetId, type)
                 .map(Rating::getValue)
                 .orElse(null);
+    }
+
+    public Double getGlobalAverageForType(RatingTargetType type) {
+        return summaryRepository.getGlobalAverage(type);
+    }
+
+    public List<RatingSummary> getTopSummaries(RatingTargetType type, long m, double C, int resultLimit) {
+        return summaryRepository.findTopSummaries(
+                type, m, C, m, PageRequest.of(0, resultLimit));
     }
 }

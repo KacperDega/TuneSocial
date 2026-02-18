@@ -36,14 +36,14 @@ public class RatingService {
         Optional<Rating> existingOpt =
                 ratingRepository.findByUserIdAndTargetIdAndTargetType(userId, targetId, type);
 
-        RatingSummary summary = summaryRepository
+        summaryRepository
                 .findByTargetIdAndTargetType(targetId, type)
                 .orElseGet(() -> createSummary(targetId, type));
 
         if (existingOpt.isPresent()) {
-            updateExistingRating(existingOpt.get(), value, summary);
+            updateExistingRating(existingOpt.get(), value);
         } else {
-            createNewRating(userId, targetId, type, value, summary);
+            createNewRating(userId, targetId, type, value);
         }
     }
 
@@ -106,7 +106,7 @@ public class RatingService {
         return summaryRepository.save(summary);
     }
 
-    private void createNewRating(Long userId, String targetId, RatingTargetType type, int value, RatingSummary summary) {
+    private void createNewRating(Long userId, String targetId, RatingTargetType type, int value) {
         Rating rating = new Rating();
         rating.setUserId(userId);
         rating.setTargetId(targetId);
@@ -119,7 +119,7 @@ public class RatingService {
         summaryRepository.updateSummary(targetId, type, 1, value);
     }
 
-    private void updateExistingRating(Rating rating, int newValue, RatingSummary summary) {
+    private void updateExistingRating(Rating rating, int newValue) {
         int oldValue = rating.getValue();
         rating.setValue(newValue);
 

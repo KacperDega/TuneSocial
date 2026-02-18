@@ -3,6 +3,9 @@ spring:
     active: local
 
 app:
+  ranking:
+    min-votes: 5
+
   cache:
     ttl-days: 30
     expired-days: 60

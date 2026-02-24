@@ -12,3 +12,12 @@ app:
 
     discography-ttl-days: 7
     discography-expired-days: 14
+
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      geniusApi:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s

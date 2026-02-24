@@ -10,6 +10,11 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+
 @Component
 @RequiredArgsConstructor
 public class GeniusClient {
@@ -29,6 +34,14 @@ public class GeniusClient {
                         .onStatus(
                                 status -> status.is4xxClientError() && status.value() == 404,
                                 response -> Mono.error(new GeniusNotFoundException(id))
+                        )
+                        .onStatus(
+                                status -> status.value() == 429,
+                                response -> Mono.error(
+                                        new GeniusRateLimitException(
+                                                parseRetryAfter(response.headers().asHttpHeaders().getFirst("Retry-After"))
+                                        )
+                                )
                         )
                         .onStatus(
                                 HttpStatusCode::is4xxClientError,
@@ -68,6 +81,14 @@ public class GeniusClient {
                                 response -> Mono.error(new GeniusNotFoundException(id))
                         )
                         .onStatus(
+                                status -> status.value() == 429,
+                                response -> Mono.error(
+                                        new GeniusRateLimitException(
+                                                parseRetryAfter(response.headers().asHttpHeaders().getFirst("Retry-After"))
+                                        )
+                                )
+                        )
+                        .onStatus(
                                 HttpStatusCode::is4xxClientError,
                                 r -> Mono.error(new GeniusClientException(r.statusCode().value()))
                         )
@@ -77,6 +98,10 @@ public class GeniusClient {
                         )
                         .bodyToMono(responseType)
         );
+    }
+
+    public GeniusDiscographyApiResponse getDiscography(String artistId) {
+        return fetchFromWebApiById(artistId, "/artists/{id}/albums", GeniusDiscographyApiResponse.class);
     }
 
     private <T> T execute(Mono<T> request) {
@@ -89,7 +114,32 @@ public class GeniusClient {
         }
     }
 
-    public GeniusDiscographyApiResponse getDiscography(String artistId) {
-        return fetchFromWebApiById(artistId, "/artists/{id}/albums", GeniusDiscographyApiResponse.class);
+    private Long parseRetryAfter(String header) {
+        Long fallback = null;
+
+        if (header == null || header.isBlank()) {
+            return fallback;
+        }
+
+        //seconds
+        try {
+            return Long.parseLong(header);
+        } catch (NumberFormatException ignored) {
+        }
+
+        // date
+        try {
+            ZonedDateTime retryTime = ZonedDateTime.parse(
+                    header,
+                    DateTimeFormatter.RFC_1123_DATE_TIME);
+
+            long seconds = Duration.between(ZonedDateTime.now(ZoneOffset.UTC), retryTime).getSeconds();
+
+            if (seconds <= 0) return fallback;
+            return seconds;
+
+        } catch (Exception ignored) {
+            return fallback;
+        }
     }
 }

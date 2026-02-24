@@ -278,7 +278,7 @@ class MusicMetadataServiceTest {
 
             // Then
 
-                // fresh - return
+                // fresh - just return
             assertThat(result.get(freshId)).isEqualTo(freshTrack);
 
                 // stale - return but trigger async refresh
@@ -298,6 +298,86 @@ class MusicMetadataServiceTest {
                 // fresh should not trigger anything
             verify(musicFetchService, never()).refreshTrackInBackground(freshId);
             verify(musicFetchService, never()).fetchTrack(freshId);
+        }
+    }
+
+    @Nested
+    class GetOrFetchAlbums {
+
+        @Test
+        @DisplayName("Should handle mixed album states: fresh, stale, expired, and missing")
+        void shouldHandleMixedAlbumStates() {
+            // Given
+            String freshId = "fresh";
+            String staleId = "stale";
+            String expiredId = "expired";
+            String missingId = "missing";
+
+            AlbumEntity freshAlbum = createAlbum(freshId, LocalDateTime.now().minusDays(5));
+            AlbumEntity staleAlbum = createAlbum(staleId, LocalDateTime.now().minusDays(40));
+            AlbumEntity expiredAlbum = createAlbum(expiredId, LocalDateTime.now().minusDays(70));
+
+            List<String> ids = List.of(freshId, staleId, expiredId, missingId);
+
+            when(albumRepository.findAllById(ids))
+                    .thenReturn(List.of(freshAlbum, staleAlbum, expiredAlbum));
+
+                // expired + missing = fetch
+            AlbumSummaryResponse expiredResp =
+                    new AlbumSummaryResponse(expiredId, "exp", null, null, null);
+
+            AlbumSummaryResponse missingResp =
+                    new AlbumSummaryResponse(missingId, "miss", null, null, null);
+
+            List<TrackResponse> expiredTracks = List.of();
+            List<TrackResponse> missingTracks = List.of();
+
+            AlbumEntity cachedExpired = new AlbumEntity();
+            cachedExpired.setId(expiredId);
+
+            AlbumEntity cachedMissing = new AlbumEntity();
+            cachedMissing.setId(missingId);
+
+            when(musicFetchService.fetchAlbum(expiredId)).thenReturn(expiredResp);
+            when(musicFetchService.fetchAlbum(missingId)).thenReturn(missingResp);
+
+            when(musicFetchService.fetchTracklist(expiredId)).thenReturn(expiredTracks);
+            when(musicFetchService.fetchTracklist(missingId)).thenReturn(missingTracks);
+
+            when(musicCacheService.cacheAlbumWithTracks(expiredResp, expiredTracks))
+                    .thenReturn(cachedExpired);
+
+            when(musicCacheService.cacheAlbumWithTracks(missingResp, missingTracks))
+                    .thenReturn(cachedMissing);
+
+            // When
+            Map<String, AlbumEntity> result = musicMetadataService.getOrFetchAlbums(ids);
+
+            // Then
+
+                // fresh - just return
+            assertThat(result.get(freshId)).isEqualTo(freshAlbum);
+
+                // stale - return but trigger async refresh
+            assertThat(result.get(staleId)).isEqualTo(staleAlbum);
+            verify(musicFetchService).refreshAlbumInBackground(staleId);
+
+                // expired - fetch + cache
+            assertThat(result.get(expiredId)).isEqualTo(cachedExpired);
+            verify(musicFetchService).fetchAlbum(expiredId);
+            verify(musicFetchService).fetchTracklist(expiredId);
+            verify(musicCacheService).cacheAlbumWithTracks(expiredResp, expiredTracks);
+
+                // missing -> fetch + cache
+            assertThat(result.get(missingId)).isEqualTo(cachedMissing);
+            verify(musicFetchService).fetchAlbum(missingId);
+            verify(musicFetchService).fetchTracklist(missingId);
+            verify(musicCacheService).cacheAlbumWithTracks(missingResp, missingTracks);
+
+                // fresh should not trigger anything
+            verify(musicFetchService, never()).refreshAlbumInBackground(freshId);
+            verify(musicFetchService, never()).fetchAlbum(freshId);
+            verify(musicFetchService, never()).fetchTracklist(freshId);
         }
     }
 

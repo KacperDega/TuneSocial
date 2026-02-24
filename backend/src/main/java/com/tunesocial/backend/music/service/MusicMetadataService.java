@@ -13,9 +13,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 @Service
@@ -30,6 +34,8 @@ public class MusicMetadataService {
     private final MusicFetchService musicFetchService;
     private final ArtistRepository artistRepository;
 
+    private final ExecutorService executor = Executors.newFixedThreadPool(5);
+
     @Value("${app.cache.ttl-days:30}")
     private int CACHE_TTL_DAYS;
 
@@ -41,6 +47,7 @@ public class MusicMetadataService {
 
     @Value("${app.cache.discography-expired-days:14}")
     private int DISCOGRAPHY_CACHE_EXPIRED_DAYS;
+
 
     public TrackEntity getOrFetchTrack(String trackId) {
         Optional<TrackEntity> cachedTrack = trackRepository.findById(trackId);
@@ -68,47 +75,66 @@ public class MusicMetadataService {
         Map<String, TrackEntity> trackMap = existingTracks.stream()
                 .collect(Collectors.toMap(TrackEntity::getId, t -> t));
 
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
+
         for (String id : trackIds) {
             TrackEntity track = trackMap.get(id);
 
             if (track == null || !track.isFresh(CACHE_EXPIRED_DAYS)) {
                 // expired - refresh then return
-                // TODO: sprobowac rozdzielci na threadsy
-                log.info("Ranking needs fresh data for track: {}", id);
-                TrackResponse resp = musicFetchService.fetchTrack(id);
+                futures.add(CompletableFuture.runAsync(() -> {
+                    log.info("Fetching fresh data for track: {}", id);
+                    TrackResponse resp = musicFetchService.fetchTrack(id);
+                    TrackEntity cached = musicCacheService.cacheTrack(resp);
 
-                trackMap.put(id, musicCacheService.cacheTrack(resp));
+                    synchronized (trackMap) {
+                        trackMap.put(id, cached);
+                    }
+                }, executor));
             } else if (!track.isFresh(CACHE_TTL_DAYS)) {
                 // stale - return + async refresh
                 musicFetchService.refreshTrackInBackground(id);
             }
         }
+
+        CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).join();
+
         return trackMap;
     }
 
-    @Transactional
     public Map<String, AlbumEntity> getOrFetchAlbums(List<String> albumIds) {
         List<AlbumEntity> existingAlbums = albumRepository.findAllById(albumIds);
 
         Map<String, AlbumEntity> albumMap = existingAlbums.stream()
                 .collect(Collectors.toMap(AlbumEntity::getId, a -> a));
 
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
+
         for (String id : albumIds) {
             AlbumEntity album = albumMap.get(id);
 
             if (album == null || !album.isFresh(CACHE_EXPIRED_DAYS)) {
                 // expired - refresh then return
-                // TODO: sprobowac rozdzielci na threadsy
-                log.info("Ranking needs fresh data for album: {}", id);
-                AlbumSummaryResponse albumResp = musicFetchService.fetchAlbum(id);
-                List<TrackResponse> trackList = musicFetchService.fetchTracklist(id);
+                futures.add(CompletableFuture.runAsync(() -> {
+                    log.info("Fetching fresh data for album: {}", id);
 
-                albumMap.put(id, musicCacheService.cacheAlbumWithTracks(albumResp, trackList));
+                    AlbumSummaryResponse albumResp = musicFetchService.fetchAlbum(id);
+                    List<TrackResponse> trackList = musicFetchService.fetchTracklist(id);
+
+                    AlbumEntity cached = musicCacheService.cacheAlbumWithTracks(albumResp, trackList);
+
+                    synchronized (albumMap) {
+                        albumMap.put(id, cached);
+                    }
+                }, executor));
             } else if (!album.isFresh(CACHE_TTL_DAYS)) {
                 // stale - return + async refresh
                 musicFetchService.refreshAlbumInBackground(id);
             }
         }
+
+        CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).join();
+
         return albumMap;
     }
 

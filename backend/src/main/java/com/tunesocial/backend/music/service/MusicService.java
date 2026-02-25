@@ -1,7 +1,7 @@
 package com.tunesocial.backend.music.service;
 
 import com.tunesocial.backend.music.dto.*;
-import com.tunesocial.backend.music.mapper.MetadataMapper;
+import com.tunesocial.backend.music.mapper.MusicEntityMapper;
 import com.tunesocial.backend.music.model.AlbumEntity;
 import com.tunesocial.backend.music.model.ArtistEntity;
 import com.tunesocial.backend.music.model.TrackEntity;
@@ -20,7 +20,7 @@ public class MusicService {
 
     private final MusicMetadataService metadataService;
     private final RatingService ratingService;
-    private final MetadataMapper mapper;
+    private final MusicEntityMapper mapper;
 
     public TrackResponse getTrack(String trackId) {
         TrackEntity entity = metadataService.getOrFetchTrack(trackId);

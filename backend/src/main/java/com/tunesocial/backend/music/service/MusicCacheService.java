@@ -5,7 +5,7 @@ import com.tunesocial.backend.music.model.AlbumEntity;
 import com.tunesocial.backend.music.model.ArtistEntity;
 import com.tunesocial.backend.music.model.TrackEntity;
 import com.tunesocial.backend.music.dto.*;
-import com.tunesocial.backend.music.mapper.MetadataMapper;
+import com.tunesocial.backend.music.mapper.MusicEntityMapper;
 import com.tunesocial.backend.music.repository.AlbumRepository;
 import com.tunesocial.backend.music.repository.ArtistRepository;
 import com.tunesocial.backend.music.repository.TrackRepository;
@@ -26,7 +26,7 @@ public class MusicCacheService {
 
     private final TrackRepository trackRepository;
     private final AlbumRepository albumRepository;
-    private final MetadataMapper metadataMapper;
+    private final MusicEntityMapper musicEntityMapper;
     private final ArtistRepository artistRepository;
 
     @Value("${app.cache.ttl-days}")
@@ -34,7 +34,7 @@ public class MusicCacheService {
 
     @Transactional
     public TrackEntity cacheTrack(TrackResponse response) {
-        TrackEntity entity = metadataMapper.toTrackEntity(response);
+        TrackEntity entity = musicEntityMapper.toTrackEntity(response);
 
         if (response.album() != null) {
             AlbumEntity albumRef = albumRepository.findById(response.album().id())
@@ -49,16 +49,16 @@ public class MusicCacheService {
     @Transactional
     public AlbumEntity cacheAlbumWithTracks(AlbumSummaryResponse albumResp, List<TrackResponse> tracks) {
         AlbumEntity albumEntity = albumRepository.findById(albumResp.id())
-                .orElseGet(() -> metadataMapper.toAlbumEntity(albumResp));
+                .orElseGet(() -> musicEntityMapper.toAlbumEntity(albumResp));
 
-        metadataMapper.updateAlbumFromResponse(albumResp, albumEntity);
+        musicEntityMapper.updateAlbumFromResponse(albumResp, albumEntity);
         albumEntity.setLastUpdated(LocalDateTime.now());
 
         for (TrackResponse trackResp : tracks) {
             TrackEntity trackEntity = trackRepository.findById(trackResp.id())
-                    .orElseGet(() -> metadataMapper.toTrackEntity(trackResp));
+                    .orElseGet(() -> musicEntityMapper.toTrackEntity(trackResp));
 
-            metadataMapper.updateTrackFromResponse(trackResp, trackEntity);
+            musicEntityMapper.updateTrackFromResponse(trackResp, trackEntity);
             trackEntity.setLastUpdated(LocalDateTime.now());
 
             albumEntity.addTrack(trackEntity);
@@ -78,9 +78,9 @@ public class MusicCacheService {
     @Transactional
     public ArtistEntity cacheArtist(ArtistResponse response) {
         ArtistEntity entity = artistRepository.findById(response.id())
-                .orElseGet(() -> metadataMapper.toArtistEntity(response));
+                .orElseGet(() -> musicEntityMapper.toArtistEntity(response));
 
-        metadataMapper.updateArtistFromResponse(response, entity);
+        musicEntityMapper.updateArtistFromResponse(response, entity);
         entity.setLastUpdated(LocalDateTime.now());
 
         return artistRepository.save(entity);
@@ -99,12 +99,12 @@ public class MusicCacheService {
             AlbumEntity album = albumRepository.findById(albumResp.id())
                     .map(existingAlbum -> {
                         // update only metadata
-                        metadataMapper.updateAlbumFromResponse(albumResp, existingAlbum);
+                        musicEntityMapper.updateAlbumFromResponse(albumResp, existingAlbum);
                         return existingAlbum;
                     })
                     .orElseGet(() -> {
                         // add new album with only metadata
-                        AlbumEntity newAlbum = metadataMapper.toAlbumEntity(albumResp);
+                        AlbumEntity newAlbum = musicEntityMapper.toAlbumEntity(albumResp);
                         newAlbum.setLastUpdated(LocalDateTime.now().minusDays(CACHE_TTL_DAYS + 1));
                         return newAlbum;
                     });

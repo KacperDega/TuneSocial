@@ -4,7 +4,7 @@ import com.tunesocial.backend.music.dto.AlbumRefDto;
 import com.tunesocial.backend.music.dto.AlbumSummaryResponse;
 import com.tunesocial.backend.music.dto.TrackResponse;
 import com.tunesocial.backend.music.exception.MusicItemNotFoundException;
-import com.tunesocial.backend.music.mapper.MetadataMapper;
+import com.tunesocial.backend.music.mapper.MusicEntityMapper;
 import com.tunesocial.backend.music.model.AlbumEntity;
 import com.tunesocial.backend.music.model.ArtistEntity;
 import com.tunesocial.backend.music.model.TrackEntity;
@@ -35,7 +35,7 @@ class MusicCacheServiceTest {
 
     @Mock private TrackRepository trackRepository;
     @Mock private AlbumRepository albumRepository;
-    @Mock private MetadataMapper metadataMapper;
+    @Mock private MusicEntityMapper musicEntityMapper;
     @Mock private ArtistRepository artistRepository;
 
     @InjectMocks private MusicCacheService musicCacheService;
@@ -53,7 +53,7 @@ class MusicCacheServiceTest {
         AlbumRefDto albumRef = new AlbumRefDto(albumId, "Album Stub");
         TrackResponse trackResp = new TrackResponse("tr-1", "Song", "url", albumRef, "2024", List.of(), List.of());
 
-        when(metadataMapper.toTrackEntity(trackResp)).thenReturn(new TrackEntity());
+        when(musicEntityMapper.toTrackEntity(trackResp)).thenReturn(new TrackEntity());
         when(albumRepository.findById(albumId)).thenReturn(Optional.empty());
         when(albumRepository.save(any(AlbumEntity.class))).thenAnswer(i -> i.getArgument(0));
         when(trackRepository.save(any(TrackEntity.class))).thenAnswer(i -> i.getArgument(0));
@@ -84,13 +84,13 @@ class MusicCacheServiceTest {
 
         when(albumRepository.findById(albumId)).thenReturn(Optional.of(existingAlbum));
         when(trackRepository.findById("t1")).thenReturn(Optional.empty());
-        when(metadataMapper.toTrackEntity(any(TrackResponse.class))).thenReturn(new TrackEntity());
+        when(musicEntityMapper.toTrackEntity(any(TrackResponse.class))).thenReturn(new TrackEntity());
 
         // When
         musicCacheService.cacheAlbumWithTracks(albumResp, List.of(trackResp));
 
         // Then
-        verify(metadataMapper).updateAlbumFromResponse(eq(albumResp), eq(existingAlbum));
+        verify(musicEntityMapper).updateAlbumFromResponse(eq(albumResp), eq(existingAlbum));
         verify(albumRepository).save(existingAlbum);
 
         assertThat(existingAlbum.getLastUpdated()).isAfter(LocalDateTime.now().minusSeconds(5));
@@ -111,7 +111,7 @@ class MusicCacheServiceTest {
                     .isInstanceOf(MusicItemNotFoundException.class)
                     .hasMessageContaining("Artist not found");
 
-            verifyNoInteractions(albumRepository, metadataMapper);
+            verifyNoInteractions(albumRepository, musicEntityMapper);
         }
 
         @Test
@@ -138,7 +138,7 @@ class MusicCacheServiceTest {
 
                 // new album
             when(albumRepository.findById("alb-new")).thenReturn(Optional.empty());
-            when(metadataMapper.toAlbumEntity(newAlbumResp)).thenReturn(new AlbumEntity());
+            when(musicEntityMapper.toAlbumEntity(newAlbumResp)).thenReturn(new AlbumEntity());
 
             when(albumRepository.save(any(AlbumEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -150,11 +150,11 @@ class MusicCacheServiceTest {
             assertThat(artist.getDiscographyLastUpdated()).isAfter(LocalDateTime.now().minusSeconds(5));
 
                 // verify existing
-            verify(metadataMapper).updateAlbumFromResponse(eq(existingAlbumResp), eq(existingAlbumEntity));
+            verify(musicEntityMapper).updateAlbumFromResponse(eq(existingAlbumResp), eq(existingAlbumEntity));
             assertThat(existingAlbumEntity.getLastUpdated()).isBefore(LocalDateTime.now().minusSeconds(1));
 
                 // verify new
-            verify(metadataMapper).toAlbumEntity(newAlbumResp);
+            verify(musicEntityMapper).toAlbumEntity(newAlbumResp);
             AlbumEntity stub = result.stream().filter(a -> "alb-new".equals(a.getId()) || a.getId() == null).findFirst().get();
             assertThat(stub.getLastUpdated()).isBefore(LocalDateTime.now().minusDays(30));
         }

@@ -13,7 +13,7 @@ import org.mapstruct.MappingTarget;
 import java.util.List;
 
 @Mapper(componentModel = "spring")
-public interface MetadataMapper {
+public interface MusicEntityMapper {
 
     //TRACK
 

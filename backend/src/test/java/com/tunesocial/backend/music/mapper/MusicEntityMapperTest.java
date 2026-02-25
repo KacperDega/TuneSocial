@@ -14,9 +14,9 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class MetadataMapperTest {
+class MusicEntityMapperTest {
 
-    private final MetadataMapper mapper = Mappers.getMapper(MetadataMapper.class);
+    private final MusicEntityMapper mapper = Mappers.getMapper(MusicEntityMapper.class);
 
     @Nested
     class TrackTests {

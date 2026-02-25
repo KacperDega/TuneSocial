@@ -8,12 +8,14 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientRequestException;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
+import org.springframework.web.util.UriBuilder;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.function.Consumer;
 
 @Component
 @RequiredArgsConstructor
@@ -25,15 +27,20 @@ public class GeniusClient {
     private final WebClient geniusApiClient;
     private final WebClient geniusWebApiClient;
 
-    private <T> T fetchFromApiByID(String id, String uri, Class<T> responseType) {
+
+    // TODO: refactor fetch methods DRY
+    private <T> T fetch(Class<T> responseType, Consumer<UriBuilder> uriFunction, String context) {
         return execute(
                 geniusApiClient.get()
-                        .uri(uri, id)
+                        .uri(uriBuilder -> {
+                            uriFunction.accept(uriBuilder);
+                            return uriBuilder.build();
+                        })
                         .header("Authorization", "Bearer " + token)
                         .retrieve()
                         .onStatus(
                                 status -> status.is4xxClientError() && status.value() == 404,
-                                response -> Mono.error(new GeniusNotFoundException(id))
+                                response -> Mono.error(new GeniusNotFoundException(context))
                         )
                         .onStatus(
                                 status -> status.value() == 429,
@@ -55,20 +62,28 @@ public class GeniusClient {
         );
     }
 
+    private <T> T fetchById(String id, String path, Class<T> responseType) {
+        return fetch(
+                responseType,
+                uri -> uri.path(path).build(id),
+                id
+        );
+    }
+
     public GeniusTrackApiResponse getTrack(String id) {
-        return fetchFromApiByID(id, "/songs/{id}", GeniusTrackApiResponse.class);
+        return fetchById(id, "/songs/{id}", GeniusTrackApiResponse.class);
     }
 
     public GeniusArtistApiResponse getArtist(String id) {
-        return fetchFromApiByID(id, "/artists/{id}", GeniusArtistApiResponse.class);
+        return fetchById(id, "/artists/{id}", GeniusArtistApiResponse.class);
     }
 
     public GeniusAlbumApiResponse getAlbum(String id) {
-        return fetchFromApiByID(id, "/albums/{id}", GeniusAlbumApiResponse.class);
+        return fetchById(id, "/albums/{id}", GeniusAlbumApiResponse.class);
     }
 
     public GeniusTracklistApiResponse getAlbumTracklist(String albumId){
-        return fetchFromApiByID(albumId, "/albums/{album_id}/tracks", GeniusTracklistApiResponse.class);
+        return fetchById(albumId, "/albums/{album_id}/tracks", GeniusTracklistApiResponse.class);
     }
 
     private <T> T fetchFromWebApiById(String id, String path, Class<T> responseType) {

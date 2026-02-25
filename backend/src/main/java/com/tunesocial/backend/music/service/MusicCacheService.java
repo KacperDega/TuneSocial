@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -113,5 +114,18 @@ public class MusicCacheService {
         }
 
         return cachedAlbums;
+    }
+
+    @Transactional
+    public void updateTrackMetadataIfPresent(TrackResponse searchResult) {
+        Optional<TrackEntity> track = trackRepository.findById(searchResult.id());
+
+        track.ifPresent(existingTrack -> {
+            musicEntityMapper.updateTrackFromResponse(searchResult, existingTrack);
+            existingTrack.setLastUpdated(LocalDateTime.now());
+
+            trackRepository.save(existingTrack);
+            log.debug("Updated existing track metadata from search: {}", searchResult.id());
+        });
     }
 }

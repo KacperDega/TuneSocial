@@ -86,6 +86,15 @@ public class GeniusClient {
         return fetchById(albumId, "/albums/{album_id}/tracks", GeniusTracklistApiResponse.class);
     }
 
+    public GeniusSearchApiResponse searchGenius(String query) {
+        return fetch(
+                GeniusSearchApiResponse.class,
+                uri -> uri.path("/search").queryParam("q", query),
+                query
+        );
+    }
+
+
     private <T> T fetchFromWebApiById(String id, String path, Class<T> responseType) {
         return execute(
                 geniusWebApiClient.get()

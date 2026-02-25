@@ -68,8 +68,16 @@ public class GeniusMusicDataProvider implements MusicDataProvider {
     @CircuitBreaker(name = "geniusApi")
     public List<TrackResponse> getTrackList(String albumId) {
         GeniusTracklistApiResponse response = callGenius(() -> geniusClient.getAlbumTracklist(albumId));
-        return trackAdapter.adaptTrack(response);
+        return trackAdapter.adaptTracks(response);
     }
+
+    @Override
+    @CircuitBreaker(name = "geniusApi")
+    public List<TrackResponse> searchTracks(String query) {
+        GeniusSearchApiResponse response = callGenius(() -> geniusClient.searchGenius(query));
+        return trackAdapter.adaptTracks(response);
+    }
+
 
     private <T> T callGenius(Supplier<T> supplier) {
         return executeWithRetry(supplier, 1);

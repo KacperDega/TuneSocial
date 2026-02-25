@@ -17,5 +17,7 @@ public interface MusicDataProvider {
     AlbumSummaryResponse getAlbum(String albumId);
 
     List<TrackResponse> getTrackList(String albumId);
+
+    List<TrackResponse> searchTracks(String query);
 }
 

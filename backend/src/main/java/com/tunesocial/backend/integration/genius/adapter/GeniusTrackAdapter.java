@@ -23,13 +23,24 @@ public class GeniusTrackAdapter {
         return geniusTrackMapper.toTrackResponse(song);
     }
 
-    public List<TrackResponse> adaptTrack(GeniusTracklistApiResponse res) {
+    public List<TrackResponse> adaptTracks(GeniusTracklistApiResponse res) {
         if (res == null || res.response() == null || res.response().tracks() == null) {
             return List.of();
         }
 
         return res.response().tracks().stream()
                 .map(track -> geniusTrackMapper.toTrackResponse(track.song()))
+                .toList();
+    }
+
+    public List<TrackResponse> adaptTracks(GeniusSearchApiResponse res) {
+        if (res == null || res.response() == null || res.response().hits() == null) {
+            return List.of();
+        }
+
+        return res.response().hits().stream()
+                .filter(hit -> hit.type().equals("song"))
+                .map(hit -> geniusTrackMapper.toTrackResponse(hit.result()))
                 .toList();
     }
 }

@@ -8,7 +8,7 @@ import com.tunesocial.backend.integration.genius.exception.GeniusClientException
 import com.tunesocial.backend.integration.genius.exception.GeniusNotFoundException;
 import com.tunesocial.backend.integration.genius.exception.GeniusRateLimitException;
 import com.tunesocial.backend.integration.genius.exception.GeniusServerException;
-import com.tunesocial.backend.integration.genius.model.*;
+import com.tunesocial.backend.integration.genius.model.GeniusResponses.*;
 import com.tunesocial.backend.music.dto.AlbumSummaryResponse;
 import com.tunesocial.backend.music.dto.ArtistResponse;
 import com.tunesocial.backend.music.dto.TrackResponse;

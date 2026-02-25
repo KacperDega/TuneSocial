@@ -1,7 +1,7 @@
 package com.tunesocial.backend.integration.genius.client;
 
 import com.tunesocial.backend.integration.genius.exception.*;
-import com.tunesocial.backend.integration.genius.model.*;
+import com.tunesocial.backend.integration.genius.model.GeniusResponses.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.reactive.function.client.WebClient;

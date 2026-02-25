@@ -3,6 +3,8 @@ package com.tunesocial.backend.integration.genius.adapter;
 import com.tunesocial.backend.integration.genius.mapper.GeniusAlbumMapper;
 import com.tunesocial.backend.integration.genius.mapper.GeniusArtistMapper;
 import com.tunesocial.backend.integration.genius.model.*;
+import com.tunesocial.backend.integration.genius.model.GeniusResponses.GeniusArtistApiResponse;
+import com.tunesocial.backend.integration.genius.model.GeniusResponses.GeniusDiscographyApiResponse;
 import com.tunesocial.backend.music.dto.AlbumSummaryResponse;
 import com.tunesocial.backend.music.dto.ArtistResponse;
 import lombok.RequiredArgsConstructor;

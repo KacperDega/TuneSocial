@@ -2,6 +2,9 @@ package com.tunesocial.backend.integration.genius.adapter;
 
 import com.tunesocial.backend.integration.genius.mapper.GeniusTrackMapper;
 import com.tunesocial.backend.integration.genius.model.*;
+import com.tunesocial.backend.integration.genius.model.GeniusResponses.GeniusSearchApiResponse;
+import com.tunesocial.backend.integration.genius.model.GeniusResponses.GeniusTrackApiResponse;
+import com.tunesocial.backend.integration.genius.model.GeniusResponses.GeniusTracklistApiResponse;
 import com.tunesocial.backend.music.dto.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

@@ -1,5 +1,6 @@
 package com.tunesocial.backend.rating.service;
 
+import com.tunesocial.backend.rating.dto.RateRequest;
 import com.tunesocial.backend.rating.exception.InvalidRatingValueException;
 import com.tunesocial.backend.rating.exception.RatingNotFoundException;
 import com.tunesocial.backend.rating.model.Rating;
@@ -43,22 +44,11 @@ class RatingServiceTest {
     class Rate {
 
         @Test
-        @DisplayName("Should throw exception when rating value is outside allowed range (1-10)")
-        void shouldThrowException_whenValueOutOfRange() {
-            // Given
-            int invalidValue = 11;
-
-            // When & Then
-            assertThatThrownBy(() ->
-                    ratingService.rate(USER_ID, TARGET_ID, TYPE, invalidValue)
-            ).isInstanceOf(InvalidRatingValueException.class);
-        }
-
-        @Test
         @DisplayName("Should create new rating and update summary when user has not rated before")
         void shouldCreateNewRating_whenNoExistingRating() {
             // Given
             int value = 8;
+            RateRequest request = new RateRequest(TARGET_ID, TYPE, value, null);
 
             when(ratingRepository.findByUserIdAndTargetIdAndTargetType(USER_ID, TARGET_ID, TYPE))
                     .thenReturn(Optional.empty());
@@ -67,7 +57,7 @@ class RatingServiceTest {
                     .thenReturn(Optional.of(new RatingSummary()));
 
             // When
-            ratingService.rate(USER_ID, TARGET_ID, TYPE, value);
+            ratingService.rate(USER_ID, request);
 
             // Then
             verify(ratingRepository).save(any(Rating.class));
@@ -85,6 +75,8 @@ class RatingServiceTest {
 
             int newValue = 9;
 
+            RateRequest request = new RateRequest(TARGET_ID, TYPE, newValue, null);
+
             when(ratingRepository.findByUserIdAndTargetIdAndTargetType(USER_ID, TARGET_ID, TYPE))
                     .thenReturn(Optional.of(existing));
 
@@ -92,7 +84,7 @@ class RatingServiceTest {
                     .thenReturn(Optional.of(new RatingSummary()));
 
             // When
-            ratingService.rate(USER_ID, TARGET_ID, TYPE, newValue);
+            ratingService.rate(USER_ID, request);
 
             // Then
             assertThat(existing.getValue()).isEqualTo(newValue);
@@ -103,6 +95,8 @@ class RatingServiceTest {
         @DisplayName("Should create summary when it does not exist")
         void shouldCreateSummary_whenNotExists() {
             // Given
+            RateRequest request = new RateRequest(TARGET_ID, TYPE, 7, null);
+
             when(ratingRepository.findByUserIdAndTargetIdAndTargetType(USER_ID, TARGET_ID, TYPE))
                     .thenReturn(Optional.empty());
 
@@ -110,7 +104,7 @@ class RatingServiceTest {
                     .thenReturn(Optional.empty());
 
             // When
-            ratingService.rate(USER_ID, TARGET_ID, TYPE, 7);
+            ratingService.rate(USER_ID, request);
 
             // Then
             verify(summaryRepository).save(any(RatingSummary.class));

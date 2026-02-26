@@ -8,7 +8,9 @@ public record RatingResponse(
         Long id,
         String targetId,
         int value,
-        Instant createdAt
+        String comment,
+        Instant createdAt,
+        Instant updatedAt
 ) {
 
     public static RatingResponse fromEntity(Rating rating) {
@@ -16,7 +18,9 @@ public record RatingResponse(
                 rating.getId(),
                 rating.getTargetId(),
                 rating.getValue(),
-                rating.getCreatedAt()
+                rating.getComment(),
+                rating.getCreatedAt(),
+                rating.getUpdatedAt()
         );
     }
 }

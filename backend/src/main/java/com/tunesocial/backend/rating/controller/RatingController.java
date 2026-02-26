@@ -1,6 +1,8 @@
 package com.tunesocial.backend.rating.controller;
 
+import com.tunesocial.backend.common.dto.PagedResponse;
 import com.tunesocial.backend.rating.dto.RateRequest;
+import com.tunesocial.backend.rating.dto.RatingResponse;
 import com.tunesocial.backend.rating.dto.RatingSummaryResponse;
 import com.tunesocial.backend.rating.model.RatingSummary;
 import com.tunesocial.backend.rating.model.RatingTargetType;
@@ -8,6 +10,10 @@ import com.tunesocial.backend.rating.service.RatingService;
 import com.tunesocial.backend.user.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -24,7 +30,7 @@ public class RatingController {
     public ResponseEntity<Void> rate(@RequestBody @Valid RateRequest request, Authentication authentication) {
         Long currentUserId = userService.getCurrentUserIdOrThrow(authentication);
 
-        ratingService.rate(currentUserId, request.targetId(), request.targetType(), request.value());
+        ratingService.rate(currentUserId, request);
         return ResponseEntity.ok().build();
     }
 
@@ -42,5 +48,14 @@ public class RatingController {
 
         RatingSummary summary = ratingService.getSummaryForTarget(targetId, targetType);
         return RatingSummaryResponse.fromEntity(summary);
+    }
+
+    @GetMapping("/{type}/{targetId}/reviews")
+    public ResponseEntity<PagedResponse<RatingResponse>> getReviews(
+            @PathVariable RatingTargetType type,
+            @PathVariable String targetId,
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+
+        return ResponseEntity.ok(ratingService.getCommentsPageForTarget(targetId, type, pageable));
     }
 }

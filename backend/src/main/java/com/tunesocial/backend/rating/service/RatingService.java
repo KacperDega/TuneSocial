@@ -1,5 +1,8 @@
 package com.tunesocial.backend.rating.service;
 
+import com.tunesocial.backend.common.dto.PagedResponse;
+import com.tunesocial.backend.rating.dto.RateRequest;
+import com.tunesocial.backend.rating.dto.RatingResponse;
 import com.tunesocial.backend.rating.exception.InvalidRatingValueException;
 import com.tunesocial.backend.rating.exception.RatingNotFoundException;
 import com.tunesocial.backend.rating.exception.RatingSummaryNotFoundException;
@@ -8,7 +11,9 @@ import com.tunesocial.backend.rating.model.RatingSummary;
 import com.tunesocial.backend.rating.model.RatingTargetType;
 import com.tunesocial.backend.rating.repository.RatingRepository;
 import com.tunesocial.backend.rating.repository.RatingSummaryRepository;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
@@ -28,22 +33,18 @@ public class RatingService {
 
     // TODO: optionally validate external target existence via provider
     @Transactional
-    public void rate(Long userId, String targetId, RatingTargetType type, int value) {
-        if (value < 1 || value > 10) {
-            throw new InvalidRatingValueException(value);
-        }
-
+    public void rate(Long userId, RateRequest request) {
         Optional<Rating> existingOpt =
-                ratingRepository.findByUserIdAndTargetIdAndTargetType(userId, targetId, type);
+                ratingRepository.findByUserIdAndTargetIdAndTargetType(userId, request.targetId(), request.targetType());
 
         summaryRepository
-                .findByTargetIdAndTargetType(targetId, type)
-                .orElseGet(() -> createSummary(targetId, type));
+                .findByTargetIdAndTargetType(request.targetId(), request.targetType())
+                .orElseGet(() -> createSummary(request.targetId(), request.targetType()));
 
         if (existingOpt.isPresent()) {
-            updateExistingRating(existingOpt.get(), value);
+            updateExistingRating(existingOpt.get(), request.value(), request.comment());
         } else {
-            createNewRating(userId, targetId, type, value);
+            createNewRating(userId, request);
         }
     }
 
@@ -106,28 +107,36 @@ public class RatingService {
         return summaryRepository.save(summary);
     }
 
-    private void createNewRating(Long userId, String targetId, RatingTargetType type, int value) {
+    private void createNewRating(Long userId, RateRequest request) {
         Rating rating = new Rating();
         rating.setUserId(userId);
-        rating.setTargetId(targetId);
-        rating.setTargetType(type);
-        rating.setValue(value);
+        rating.setTargetId(request.targetId());
+        rating.setTargetType(request.targetType());
+        rating.setValue(request.value());
+        rating.setComment(request.comment());
+
         rating.setCreatedAt(Instant.now());
+        rating.setUpdatedAt(rating.getCreatedAt());
 
         ratingRepository.save(rating);
 
-        summaryRepository.updateSummary(targetId, type, 1, value);
+        summaryRepository.updateSummary(request.targetId(), request.targetType(), 1, request.value());
     }
 
-    private void updateExistingRating(Rating rating, int newValue) {
+    private void updateExistingRating(Rating rating, int newValue, String comment) {
         int oldValue = rating.getValue();
         rating.setValue(newValue);
+
+        if (rating.getComment() == null || !rating.getComment().equals(comment)) {
+            rating.setComment(comment);
+        }
 
         ratingRepository.save(rating);
 
         summaryRepository.updateSummary(rating.getTargetId(), rating.getTargetType(), 0, newValue - oldValue);
     }
 
+    @Transactional(readOnly = true)
     public Integer findUserRatingValue(Long userId, String targetId, RatingTargetType type) {
 
         if (userId == null) {
@@ -140,12 +149,41 @@ public class RatingService {
                 .orElse(null);
     }
 
+    @Transactional(readOnly = true)
     public Double getGlobalAverageForType(RatingTargetType type) {
         return summaryRepository.getGlobalAverage(type);
     }
 
+    @Transactional(readOnly = true)
     public List<RatingSummary> getTopSummaries(RatingTargetType type, long m, double C, int resultLimit) {
         return summaryRepository.findTopSummaries(
                 type, m, C, m, PageRequest.of(0, resultLimit));
+    }
+
+    @Transactional(readOnly = true)
+    public PagedResponse<RatingResponse> getCommentsPageForTarget(String targetId, RatingTargetType type, Pageable pageable) {
+        Page<Rating> page = ratingRepository.findAllByTargetIdAndTargetTypeAndCommentIsNotNull(
+                targetId, type, pageable);
+
+        List<RatingResponse> content = page.getContent().stream()
+                .map(RatingResponse::fromEntity)
+                .toList();
+
+        Integer nextPage = page.hasNext() ? page.getNumber() + 1 : null;
+
+        return new PagedResponse<>(content, nextPage);
+    }
+
+    @Transactional(readOnly = true)
+    public PagedResponse<RatingResponse> getUserComments(Long userId, Pageable pageable) {
+        Page<Rating> page = ratingRepository.findAllByUserIdAndCommentIsNotNullAndCommentIsNotEmpty(userId, pageable);
+
+        List<RatingResponse> content = page.getContent().stream()
+                .map(RatingResponse::fromEntity)
+                .toList();
+
+        Integer nextPage = page.hasNext() ? page.getNumber() + 1 : null;
+
+        return new PagedResponse<>(content, nextPage);
     }
 }

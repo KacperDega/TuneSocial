@@ -1,5 +1,6 @@
 package com.tunesocial.backend.rating.controller;
 
+import com.tunesocial.backend.common.dto.PagedResponse;
 import com.tunesocial.backend.rating.dto.RatingResponse;
 import com.tunesocial.backend.rating.exception.RatingNotFoundException;
 import com.tunesocial.backend.rating.model.Rating;
@@ -7,6 +8,10 @@ import com.tunesocial.backend.rating.model.RatingTargetType;
 import com.tunesocial.backend.rating.service.RatingService;
 import com.tunesocial.backend.user.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -44,5 +49,15 @@ public class MyRatingsController {
         return ratings.stream()
                 .map(RatingResponse::fromEntity)
                 .collect(Collectors.toList());
+    }
+
+    @GetMapping("/reviews")
+    public ResponseEntity<PagedResponse<RatingResponse>> getMyReviews(
+            Authentication authentication,
+            @PageableDefault(size = 10, sort = "updatedAt", direction = Sort.Direction.DESC) Pageable pageable) {
+
+        Long currentUserId = userService.getCurrentUserIdOrThrow(authentication);
+
+        return ResponseEntity.ok(ratingService.getUserComments(currentUserId, pageable));
     }
 }

@@ -35,6 +35,20 @@ public class Rating {
 
     private int value;
 
-    private Instant createdAt;
+    @Column(length = 1000)
+    private String comment;
 
+    private Instant createdAt;
+    private Instant updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = Instant.now();
+        updatedAt = Instant.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = Instant.now();
+    }
 }

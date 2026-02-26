@@ -4,7 +4,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 
 @Entity
 @Table(name = "cached_artists")
@@ -18,11 +19,11 @@ public class ArtistEntity implements CacheableEntity {
     @Lob
     private String description;
 
-    private LocalDateTime lastUpdated;
-    private LocalDateTime discographyLastUpdated;
+    private Instant lastUpdated;
+    private Instant discographyLastUpdated;
 
     public boolean isDiscographyFresh(int days) {
         if (discographyLastUpdated == null) return false;
-        return discographyLastUpdated.isAfter(LocalDateTime.now().minusDays(days));
+        return discographyLastUpdated.isAfter(Instant.now().minus(days, ChronoUnit.DAYS));
     }
 }

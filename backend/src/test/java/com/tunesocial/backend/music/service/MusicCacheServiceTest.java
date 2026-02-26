@@ -21,7 +21,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
@@ -65,7 +66,7 @@ class MusicCacheServiceTest {
         verify(albumRepository).save(argThat(album ->
                 album.getId().equals(albumId) &&
                         album.getTitle().equals("Album Stub") &&
-                        album.getLastUpdated().isBefore(LocalDateTime.now().minusDays(30))
+                        album.getLastUpdated().isBefore(Instant.now().minus(30, ChronoUnit.DAYS))
         ));
         assertThat(result.getAlbum()).isNotNull();
     }
@@ -93,7 +94,7 @@ class MusicCacheServiceTest {
         verify(musicEntityMapper).updateAlbumFromResponse(eq(albumResp), eq(existingAlbum));
         verify(albumRepository).save(existingAlbum);
 
-        assertThat(existingAlbum.getLastUpdated()).isAfter(LocalDateTime.now().minusSeconds(5));
+        assertThat(existingAlbum.getLastUpdated()).isAfter(Instant.now().minus(5, ChronoUnit.SECONDS));
     }
 
     @Nested
@@ -129,7 +130,7 @@ class MusicCacheServiceTest {
             AlbumEntity existingAlbumEntity = new AlbumEntity();
             existingAlbumEntity.setId("alb-exists");
             existingAlbumEntity.setTitle("Old Title");
-            existingAlbumEntity.setLastUpdated(LocalDateTime.now().minusDays(5));
+            existingAlbumEntity.setLastUpdated(Instant.now().minus(5, ChronoUnit.DAYS));
 
             when(artistRepository.findById(artistId)).thenReturn(Optional.of(artist));
 
@@ -147,16 +148,16 @@ class MusicCacheServiceTest {
 
             // Then
             assertThat(result).hasSize(2);
-            assertThat(artist.getDiscographyLastUpdated()).isAfter(LocalDateTime.now().minusSeconds(5));
+            assertThat(artist.getDiscographyLastUpdated()).isAfter(Instant.now().minus(5, ChronoUnit.SECONDS));
 
                 // verify existing
             verify(musicEntityMapper).updateAlbumFromResponse(eq(existingAlbumResp), eq(existingAlbumEntity));
-            assertThat(existingAlbumEntity.getLastUpdated()).isBefore(LocalDateTime.now().minusSeconds(1));
+            assertThat(existingAlbumEntity.getLastUpdated()).isBefore(Instant.now().minus(1, ChronoUnit.SECONDS));
 
                 // verify new
             verify(musicEntityMapper).toAlbumEntity(newAlbumResp);
             AlbumEntity stub = result.stream().filter(a -> "alb-new".equals(a.getId()) || a.getId() == null).findFirst().get();
-            assertThat(stub.getLastUpdated()).isBefore(LocalDateTime.now().minusDays(30));
+            assertThat(stub.getLastUpdated()).isBefore(Instant.now().minus(30, ChronoUnit.DAYS));
         }
     }
 }

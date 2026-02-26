@@ -5,7 +5,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,7 +25,7 @@ public class AlbumEntity implements CacheableEntity {
     @OneToMany(mappedBy = "album", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TrackEntity> tracks = new ArrayList<>();
 
-    private LocalDateTime lastUpdated;
+    private Instant lastUpdated;
 
     public void addTrack(TrackEntity track) {
         if (track == null) {

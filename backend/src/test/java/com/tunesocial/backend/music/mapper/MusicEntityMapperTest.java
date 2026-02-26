@@ -9,7 +9,8 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -155,7 +156,7 @@ class MusicEntityMapperTest {
             AlbumEntity existing = new AlbumEntity();
             existing.setId("alb-1");
             existing.setTitle("Old Album Title");
-            existing.setLastUpdated(LocalDateTime.now().minusDays(10));
+            existing.setLastUpdated(Instant.now().minus(10, ChronoUnit.DAYS));
 
             AlbumSummaryResponse update = new AlbumSummaryResponse(
                     "alb-1", "Updated Album Title", List.of(), "http://new-image.jpg", "2024"
@@ -206,7 +207,7 @@ class MusicEntityMapperTest {
             ArtistEntity existing = new ArtistEntity();
             existing.setId("art-1");
             existing.setName("Old Name");
-            existing.setDiscographyLastUpdated(LocalDateTime.now().minusDays(5));
+            existing.setDiscographyLastUpdated(Instant.now().minus(5, ChronoUnit.DAYS));
 
             ArtistResponse update = new ArtistResponse(
                     "art-1", "New Name", "http://new-avatar.jpg", "New Bio"

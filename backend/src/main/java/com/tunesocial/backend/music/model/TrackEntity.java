@@ -6,7 +6,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 
@@ -30,7 +30,7 @@ public class TrackEntity implements CacheableEntity {
     @JoinColumn(name = "album_id")
     private AlbumEntity album;
 
-    private LocalDateTime lastUpdated;
+    private Instant lastUpdated;
 
     @Override
     public boolean equals(Object o) {

@@ -15,7 +15,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -43,7 +44,7 @@ public class MusicCacheService {
             entity.setAlbum(albumRef);
         }
 
-        entity.setLastUpdated(LocalDateTime.now());
+        entity.setLastUpdated(Instant.now());
         return trackRepository.save(entity);
     }
 
@@ -53,14 +54,14 @@ public class MusicCacheService {
                 .orElseGet(() -> musicEntityMapper.toAlbumEntity(albumResp));
 
         musicEntityMapper.updateAlbumFromResponse(albumResp, albumEntity);
-        albumEntity.setLastUpdated(LocalDateTime.now());
+        albumEntity.setLastUpdated(Instant.now());
 
         for (TrackResponse trackResp : tracks) {
             TrackEntity trackEntity = trackRepository.findById(trackResp.id())
                     .orElseGet(() -> musicEntityMapper.toTrackEntity(trackResp));
 
             musicEntityMapper.updateTrackFromResponse(trackResp, trackEntity);
-            trackEntity.setLastUpdated(LocalDateTime.now());
+            trackEntity.setLastUpdated(Instant.now());
 
             albumEntity.addTrack(trackEntity);
         }
@@ -72,7 +73,7 @@ public class MusicCacheService {
         AlbumEntity stub = new AlbumEntity();
         stub.setId(ref.id());
         stub.setTitle(ref.name());
-        stub.setLastUpdated(LocalDateTime.now().minusDays(CACHE_TTL_DAYS + 1));
+        stub.setLastUpdated(Instant.now().minus(CACHE_TTL_DAYS + 1, ChronoUnit.DAYS));
         return albumRepository.save(stub);
     }
 
@@ -82,7 +83,7 @@ public class MusicCacheService {
                 .orElseGet(() -> musicEntityMapper.toArtistEntity(response));
 
         musicEntityMapper.updateArtistFromResponse(response, entity);
-        entity.setLastUpdated(LocalDateTime.now());
+        entity.setLastUpdated(Instant.now());
 
         return artistRepository.save(entity);
     }
@@ -92,7 +93,7 @@ public class MusicCacheService {
         ArtistEntity artist = artistRepository.findById(artistId)
                 .orElseThrow(() -> new MusicItemNotFoundException("Artist not found for discography update"));
 
-        artist.setDiscographyLastUpdated(LocalDateTime.now());
+        artist.setDiscographyLastUpdated(Instant.now());
 
         List<AlbumEntity> cachedAlbums = new ArrayList<>();
 
@@ -106,7 +107,7 @@ public class MusicCacheService {
                     .orElseGet(() -> {
                         // add new album with only metadata
                         AlbumEntity newAlbum = musicEntityMapper.toAlbumEntity(albumResp);
-                        newAlbum.setLastUpdated(LocalDateTime.now().minusDays(CACHE_TTL_DAYS + 1));
+                        newAlbum.setLastUpdated(Instant.now().minus(CACHE_TTL_DAYS + 1, ChronoUnit.DAYS));
                         return newAlbum;
                     });
 
@@ -122,7 +123,7 @@ public class MusicCacheService {
 
         track.ifPresent(existingTrack -> {
             musicEntityMapper.updateTrackFromResponse(searchResult, existingTrack);
-            existingTrack.setLastUpdated(LocalDateTime.now());
+            existingTrack.setLastUpdated(Instant.now());
 
             trackRepository.save(existingTrack);
             log.debug("Updated existing track metadata from search: {}", searchResult.id());

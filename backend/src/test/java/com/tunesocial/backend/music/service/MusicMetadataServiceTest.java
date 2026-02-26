@@ -20,7 +20,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -56,7 +57,7 @@ class MusicMetadataServiceTest {
         void shouldReturnCachedTrackWhenFresh() {
             // Given
             String id = "t1";
-            TrackEntity freshTrack = createTrackWithDate(id, LocalDateTime.now().minusDays(5));
+            TrackEntity freshTrack = createTrackWithDaysOffset(id, -5);
             when(trackRepository.findById(id)).thenReturn(Optional.of(freshTrack));
 
             // When
@@ -72,7 +73,7 @@ class MusicMetadataServiceTest {
         void shouldReturnCachedTrackAndTriggerBackgroundRefreshWhenStale() {
             // Given
             String id = "t1";
-            TrackEntity staleTrack = createTrackWithDate(id, LocalDateTime.now().minusDays(45));
+            TrackEntity staleTrack = createTrackWithDaysOffset(id, -45);
             when(trackRepository.findById(id)).thenReturn(Optional.of(staleTrack));
 
             // When
@@ -89,7 +90,7 @@ class MusicMetadataServiceTest {
         void shouldFetchAndCacheWhenTrackExpired() {
             // Given
             String id = "t1";
-            TrackEntity expiredTrack = createTrackWithDate(id, LocalDateTime.now().minusDays(70));
+            TrackEntity expiredTrack = createTrackWithDaysOffset(id, -70);
             TrackResponse response = new TrackResponse(id, "Title", null, null, "2024", List.of(), List.of());
 
             when(trackRepository.findById(id)).thenReturn(Optional.of(expiredTrack));
@@ -115,7 +116,7 @@ class MusicMetadataServiceTest {
 
             // Given
             String id = "alb1";
-            AlbumEntity freshAlbum = createAlbum(id, LocalDateTime.now().minusDays(5));
+            AlbumEntity freshAlbum = createAlbum(id, Instant.now().minus(5, ChronoUnit.DAYS));
             when(albumRepository.findById(id)).thenReturn(Optional.of(freshAlbum));
 
             // When
@@ -156,7 +157,7 @@ class MusicMetadataServiceTest {
 
             // Given
             String id = "art1";
-            ArtistEntity staleArtist = createArtist(id, LocalDateTime.now().minusDays(45));
+            ArtistEntity staleArtist = createArtist(id, Instant.now().minus(45, ChronoUnit.DAYS));
             when(artistRepository.findById(id)).thenReturn(Optional.of(staleArtist));
 
             // When
@@ -177,8 +178,8 @@ class MusicMetadataServiceTest {
 
             // Given
             String artId = "art1";
-            ArtistEntity artist = createArtist(artId, LocalDateTime.now());
-            artist.setDiscographyLastUpdated(LocalDateTime.now().minusDays(2));
+            ArtistEntity artist = createArtist(artId, Instant.now());
+            artist.setDiscographyLastUpdated(Instant.now().minus(2, ChronoUnit.DAYS));
 
             when(artistRepository.findById(artId)).thenReturn(Optional.of(artist));
 
@@ -196,8 +197,8 @@ class MusicMetadataServiceTest {
 
             // Given
             String artId = "art1";
-            ArtistEntity artist = createArtist(artId, LocalDateTime.now());
-            artist.setDiscographyLastUpdated(LocalDateTime.now().minusDays(20));
+            ArtistEntity artist = createArtist(artId, Instant.now());
+            artist.setDiscographyLastUpdated(Instant.now().minus(20, ChronoUnit.DAYS));
 
             List<AlbumSummaryResponse> discographyResp = List.of();
             when(artistRepository.findById(artId)).thenReturn(Optional.of(artist));
@@ -216,7 +217,7 @@ class MusicMetadataServiceTest {
             // Given
             String artId = "art1";
             ArtistResponse artResp = new ArtistResponse(artId, "Name", "url", "desc");
-            ArtistEntity artEntity = createArtist(artId, LocalDateTime.now());
+            ArtistEntity artEntity = createArtist(artId, Instant.now());
 
             when(artistRepository.findById(artId)).thenReturn(Optional.empty());
             when(musicFetchService.fetchArtist(artId)).thenReturn(artResp);
@@ -248,9 +249,9 @@ class MusicMetadataServiceTest {
             String expiredId = "expired";
             String missingId = "missing";
 
-            TrackEntity freshTrack = createTrackWithDate(freshId, LocalDateTime.now().minusDays(5));
-            TrackEntity staleTrack = createTrackWithDate(staleId, LocalDateTime.now().minusDays(40));
-            TrackEntity expiredTrack = createTrackWithDate(expiredId, LocalDateTime.now().minusDays(70));
+            TrackEntity freshTrack = createTrackWithDaysOffset(freshId, -5);
+            TrackEntity staleTrack = createTrackWithDaysOffset(staleId, -40);
+            TrackEntity expiredTrack = createTrackWithDaysOffset(expiredId, -70);
 
             List<String> ids = List.of(freshId, staleId, expiredId, missingId);
 
@@ -313,9 +314,9 @@ class MusicMetadataServiceTest {
             String expiredId = "expired";
             String missingId = "missing";
 
-            AlbumEntity freshAlbum = createAlbum(freshId, LocalDateTime.now().minusDays(5));
-            AlbumEntity staleAlbum = createAlbum(staleId, LocalDateTime.now().minusDays(40));
-            AlbumEntity expiredAlbum = createAlbum(expiredId, LocalDateTime.now().minusDays(70));
+            AlbumEntity freshAlbum = createAlbum(freshId, Instant.now().minus(5, ChronoUnit.DAYS));
+            AlbumEntity staleAlbum = createAlbum(staleId, Instant.now().minus(40, ChronoUnit.DAYS));
+            AlbumEntity expiredAlbum = createAlbum(expiredId, Instant.now().minus(70, ChronoUnit.DAYS));
 
             List<String> ids = List.of(freshId, staleId, expiredId, missingId);
 
@@ -381,13 +382,14 @@ class MusicMetadataServiceTest {
         }
     }
 
-    private TrackEntity createTrackWithDate(String id, LocalDateTime lastUpdated) {
+    private TrackEntity createTrackWithDaysOffset(String id, int daysOffset) {
         TrackEntity track = new TrackEntity();
         track.setId(id);
         track.setTitle("Test Track");
         track.setImageUrl(null);
         track.setReleaseDate("2020-01-01");
-        track.setLastUpdated(lastUpdated);
+
+        track.setLastUpdated(Instant.now().plus(daysOffset, ChronoUnit.DAYS));
 
         track.setArtists(List.of());
         track.setLinks(List.of());
@@ -395,14 +397,14 @@ class MusicMetadataServiceTest {
         return track;
     }
 
-    private AlbumEntity createAlbum(String id, LocalDateTime lastUpdated) {
+    private AlbumEntity createAlbum(String id, Instant lastUpdated) {
         AlbumEntity album = new AlbumEntity();
         album.setId(id);
         album.setLastUpdated(lastUpdated);
         return album;
     }
 
-    private ArtistEntity createArtist(String id, LocalDateTime lastUpdated) {
+    private ArtistEntity createArtist(String id, Instant lastUpdated) {
         ArtistEntity artist = new ArtistEntity();
         artist.setId(id);
         artist.setLastUpdated(lastUpdated);

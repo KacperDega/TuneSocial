@@ -1,16 +1,17 @@
 package com.tunesocial.backend.music.model;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 
 public interface CacheableEntity {
     String getId();
 
-    LocalDateTime getLastUpdated();
+    Instant getLastUpdated();
 
-    void setLastUpdated(LocalDateTime lastUpdated);
+    void setLastUpdated(Instant lastUpdated);
 
     default boolean isFresh(int ttlDays) {
         return getLastUpdated() != null &&
-                getLastUpdated().isAfter(LocalDateTime.now().minusDays(ttlDays));
+                getLastUpdated().isAfter(Instant.now().minus(ttlDays, ChronoUnit.DAYS));
     }
 }

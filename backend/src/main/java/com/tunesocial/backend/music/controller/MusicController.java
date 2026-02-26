@@ -26,7 +26,7 @@ public class MusicController {
 //    }
 
     @GetMapping("/albums/{albumId}")
-    public AlbumSummaryResponse getAlbum(@PathVariable String albumId) {
+    public AlbumSummaryResponse getAlbumSummary(@PathVariable String albumId) {
         return musicService.getAlbum(albumId);
     }
 
@@ -52,8 +52,8 @@ public class MusicController {
         return musicService.getTrackDetails(trackId, userId);
     }
 
-    @GetMapping("/albums/{albumId}")
-    public AlbumDetailsResponse getAlbum(@PathVariable String albumId, Authentication authentication) {
+    @GetMapping("/albums/{albumId}/details")
+    public AlbumDetailsResponse getAlbumDetails(@PathVariable String albumId, Authentication authentication) {
         Long userId = userService.getCurrentUserIdOrNull(authentication);
 
         return musicService.getAlbumDetails(albumId, userId);

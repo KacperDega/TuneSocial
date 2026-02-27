@@ -13,7 +13,7 @@ import java.util.Objects;
 @Entity
 @Table(name = "cached_tracks")
 @Getter @Setter
-public class TrackEntity implements CacheableEntity {
+public class TrackEntity implements CacheableEntity, RateableEntity {
     @Id
     private String id;
     private String title;

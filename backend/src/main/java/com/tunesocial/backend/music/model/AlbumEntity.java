@@ -12,7 +12,7 @@ import java.util.List;
 @Entity
 @Table(name = "cached_albums")
 @Getter @Setter
-public class AlbumEntity implements CacheableEntity {
+public class AlbumEntity implements CacheableEntity, RateableEntity {
     @Id
     private String id;
     private String title;

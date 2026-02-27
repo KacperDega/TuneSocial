@@ -1,7 +1,13 @@
 package com.tunesocial.backend.rating.service;
 
+import com.tunesocial.backend.common.dto.PagedResponse;
+import com.tunesocial.backend.music.dto.ArtistRefDto;
+import com.tunesocial.backend.music.model.AlbumEntity;
+import com.tunesocial.backend.music.model.TrackEntity;
+import com.tunesocial.backend.music.service.MusicMetadataService;
 import com.tunesocial.backend.rating.dto.RateRequest;
-import com.tunesocial.backend.rating.exception.InvalidRatingValueException;
+import com.tunesocial.backend.rating.dto.RatingDetailsResponse;
+import com.tunesocial.backend.rating.dto.RatingResponse;
 import com.tunesocial.backend.rating.exception.RatingNotFoundException;
 import com.tunesocial.backend.rating.model.Rating;
 import com.tunesocial.backend.rating.model.RatingSummary;
@@ -15,8 +21,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -33,12 +45,17 @@ class RatingServiceTest {
     @Mock
     private RatingSummaryRepository summaryRepository;
 
+    @Mock
+    private MusicMetadataService metadataService;
+
     @InjectMocks
     private RatingService ratingService;
 
     private final Long USER_ID = 1L;
-    private final String TARGET_ID = "tr-1";
+    private final String TRACK_ID = "tr-1";
+    private final String ALBUM_ID = "al-1";
     private final RatingTargetType TYPE = RatingTargetType.TRACK;
+    private final Pageable PAGEABLE = PageRequest.of(0, 10);
 
     @Nested
     class Rate {
@@ -48,12 +65,12 @@ class RatingServiceTest {
         void shouldCreateNewRating_whenNoExistingRating() {
             // Given
             int value = 8;
-            RateRequest request = new RateRequest(TARGET_ID, TYPE, value, null);
+            RateRequest request = new RateRequest(TRACK_ID, TYPE, value, null);
 
-            when(ratingRepository.findByUserIdAndTargetIdAndTargetType(USER_ID, TARGET_ID, TYPE))
+            when(ratingRepository.findByUserIdAndTargetIdAndTargetType(USER_ID, TRACK_ID, TYPE))
                     .thenReturn(Optional.empty());
 
-            when(summaryRepository.findByTargetIdAndTargetType(TARGET_ID, TYPE))
+            when(summaryRepository.findByTargetIdAndTargetType(TRACK_ID, TYPE))
                     .thenReturn(Optional.of(new RatingSummary()));
 
             // When
@@ -61,7 +78,7 @@ class RatingServiceTest {
 
             // Then
             verify(ratingRepository).save(any(Rating.class));
-            verify(summaryRepository).updateSummary(TARGET_ID, TYPE, 1, value);
+            verify(summaryRepository).updateSummary(TRACK_ID, TYPE, 1, value);
         }
 
         @Test
@@ -70,17 +87,17 @@ class RatingServiceTest {
             // Given
             Rating existing = new Rating();
             existing.setValue(5);
-            existing.setTargetId(TARGET_ID);
+            existing.setTargetId(TRACK_ID);
             existing.setTargetType(TYPE);
 
             int newValue = 9;
 
-            RateRequest request = new RateRequest(TARGET_ID, TYPE, newValue, null);
+            RateRequest request = new RateRequest(TRACK_ID, TYPE, newValue, null);
 
-            when(ratingRepository.findByUserIdAndTargetIdAndTargetType(USER_ID, TARGET_ID, TYPE))
+            when(ratingRepository.findByUserIdAndTargetIdAndTargetType(USER_ID, TRACK_ID, TYPE))
                     .thenReturn(Optional.of(existing));
 
-            when(summaryRepository.findByTargetIdAndTargetType(TARGET_ID, TYPE))
+            when(summaryRepository.findByTargetIdAndTargetType(TRACK_ID, TYPE))
                     .thenReturn(Optional.of(new RatingSummary()));
 
             // When
@@ -88,19 +105,19 @@ class RatingServiceTest {
 
             // Then
             assertThat(existing.getValue()).isEqualTo(newValue);
-            verify(summaryRepository).updateSummary(TARGET_ID, TYPE, 0, newValue - 5);
+            verify(summaryRepository).updateSummary(TRACK_ID, TYPE, 0, newValue - 5);
         }
 
         @Test
         @DisplayName("Should create summary when it does not exist")
         void shouldCreateSummary_whenNotExists() {
             // Given
-            RateRequest request = new RateRequest(TARGET_ID, TYPE, 7, null);
+            RateRequest request = new RateRequest(TRACK_ID, TYPE, 7, null);
 
-            when(ratingRepository.findByUserIdAndTargetIdAndTargetType(USER_ID, TARGET_ID, TYPE))
+            when(ratingRepository.findByUserIdAndTargetIdAndTargetType(USER_ID, TRACK_ID, TYPE))
                     .thenReturn(Optional.empty());
 
-            when(summaryRepository.findByTargetIdAndTargetType(TARGET_ID, TYPE))
+            when(summaryRepository.findByTargetIdAndTargetType(TRACK_ID, TYPE))
                     .thenReturn(Optional.empty());
 
             // When
@@ -148,23 +165,23 @@ class RatingServiceTest {
             Rating rating = new Rating();
             rating.setId(1L);
             rating.setUserId(USER_ID);
-            rating.setTargetId(TARGET_ID);
+            rating.setTargetId(TRACK_ID);
             rating.setTargetType(TYPE);
             rating.setValue(6);
 
             RatingSummary summary = new RatingSummary();
-            summary.setTargetId(TARGET_ID);
+            summary.setTargetId(TRACK_ID);
             summary.setTargetType(TYPE);
 
             when(ratingRepository.findById(1L)).thenReturn(Optional.of(rating));
-            when(summaryRepository.findByTargetIdAndTargetType(TARGET_ID, TYPE))
+            when(summaryRepository.findByTargetIdAndTargetType(TRACK_ID, TYPE))
                     .thenReturn(Optional.of(summary));
 
             // When
             ratingService.removeRating(USER_ID, 1L);
 
             // Then
-            verify(summaryRepository).updateSummary(TARGET_ID, TYPE, -1, -6);
+            verify(summaryRepository).updateSummary(TRACK_ID, TYPE, -1, -6);
             verify(ratingRepository).delete(rating);
         }
     }
@@ -178,11 +195,11 @@ class RatingServiceTest {
             // Given
             RatingSummary summary = new RatingSummary();
 
-            when(summaryRepository.findByTargetIdAndTargetType(TARGET_ID, TYPE))
+            when(summaryRepository.findByTargetIdAndTargetType(TRACK_ID, TYPE))
                     .thenReturn(Optional.of(summary));
 
             // When
-            RatingSummary result = ratingService.getSummaryForTarget(TARGET_ID, TYPE);
+            RatingSummary result = ratingService.getSummaryForTarget(TRACK_ID, TYPE);
 
             // Then
             assertThat(result).isSameAs(summary);
@@ -192,16 +209,16 @@ class RatingServiceTest {
         @DisplayName("Should return empty summary when none exists")
         void shouldReturnEmptySummary_whenNotExists() {
             // Given
-            when(summaryRepository.findByTargetIdAndTargetType(TARGET_ID, TYPE))
+            when(summaryRepository.findByTargetIdAndTargetType(TRACK_ID, TYPE))
                     .thenReturn(Optional.empty());
 
             // When
-            RatingSummary result = ratingService.getSummaryForTarget(TARGET_ID, TYPE);
+            RatingSummary result = ratingService.getSummaryForTarget(TRACK_ID, TYPE);
 
             // Then
             assertThat(result.getRatingCount()).isZero();
             assertThat(result.getRatingSum()).isZero();
-            assertThat(result.getTargetId()).isEqualTo(TARGET_ID);
+            assertThat(result.getTargetId()).isEqualTo(TRACK_ID);
             assertThat(result.getTargetType()).isEqualTo(TYPE);
         }
     }
@@ -213,7 +230,7 @@ class RatingServiceTest {
         @DisplayName("Should return null when userId is null")
         void shouldReturnNull_whenUserIdNull() {
             // When
-            Integer result = ratingService.findUserRatingValue(null, TARGET_ID, TYPE);
+            Integer result = ratingService.findUserRatingValue(null, TRACK_ID, TYPE);
 
             // Then
             assertThat(result).isNull();
@@ -226,11 +243,11 @@ class RatingServiceTest {
             Rating rating = new Rating();
             rating.setValue(7);
 
-            when(ratingRepository.findByUserIdAndTargetIdAndTargetType(USER_ID, TARGET_ID, TYPE))
+            when(ratingRepository.findByUserIdAndTargetIdAndTargetType(USER_ID, TRACK_ID, TYPE))
                     .thenReturn(Optional.of(rating));
 
             // When
-            Integer result = ratingService.findUserRatingValue(USER_ID, TARGET_ID, TYPE);
+            Integer result = ratingService.findUserRatingValue(USER_ID, TRACK_ID, TYPE);
 
             // Then
             assertThat(result).isEqualTo(7);
@@ -240,14 +257,132 @@ class RatingServiceTest {
         @DisplayName("Should return null when rating does not exist")
         void shouldReturnNull_whenRatingNotExists() {
             // Given
-            when(ratingRepository.findByUserIdAndTargetIdAndTargetType(USER_ID, TARGET_ID, TYPE))
+            when(ratingRepository.findByUserIdAndTargetIdAndTargetType(USER_ID, TRACK_ID, TYPE))
                     .thenReturn(Optional.empty());
 
             // When
-            Integer result = ratingService.findUserRatingValue(USER_ID, TARGET_ID, TYPE);
+            Integer result = ratingService.findUserRatingValue(USER_ID, TRACK_ID, TYPE);
 
             // Then
             assertThat(result).isNull();
+        }
+    }
+
+    @Nested
+    class GetCommentsPageForTarget {
+
+        @Test
+        @DisplayName("Should return paged response with next page index when more results exist")
+        void shouldReturnPagedResponse_WithNextPage_WhenMoreResultsExist() {
+            // Given
+            Rating rating = new Rating();
+            rating.setId(1L);
+            rating.setComment("Comment");
+
+            Page<Rating> page = new PageImpl<>(List.of(rating), PAGEABLE, 20);
+
+            when(ratingRepository.findAllByTargetIdAndTargetTypeAndCommentIsNotNull(TRACK_ID, RatingTargetType.TRACK, PAGEABLE))
+                    .thenReturn(page);
+
+            // When
+            PagedResponse<RatingResponse> result = ratingService.getCommentsPageForTarget(TRACK_ID, RatingTargetType.TRACK, PAGEABLE);
+
+            // Then
+            assertThat(result.content()).hasSize(1);
+            assertThat(result.nextPage()).isEqualTo(1);
+            assertThat(result.content().get(0).comment()).isEqualTo("Comment");
+        }
+
+        @Test
+        @DisplayName("Should return null as next page when it is the last page")
+        void shouldReturnNullNextPage_WhenLastPage() {
+            // Given
+            Page<Rating> page = new PageImpl<>(List.of(new Rating()), PAGEABLE, 1);
+            when(ratingRepository.findAllByTargetIdAndTargetTypeAndCommentIsNotNull(TRACK_ID, RatingTargetType.TRACK, PAGEABLE))
+                    .thenReturn(page);
+
+            // When
+            PagedResponse<RatingResponse> result = ratingService.getCommentsPageForTarget(TRACK_ID, RatingTargetType.TRACK, PAGEABLE);
+
+            // Then
+            assertThat(result.nextPage()).isNull();
+        }
+    }
+
+    @Nested
+    class GetUserComments {
+
+        @Test
+        @DisplayName("Should fetch track and album metadata separately and map to details")
+        void shouldFetchMetadataAndMapToDetails() {
+            // Given
+            Rating trackRating = new Rating();
+            trackRating.setTargetId(TRACK_ID);
+            trackRating.setTargetType(RatingTargetType.TRACK);
+
+            Rating albumRating = new Rating();
+            albumRating.setTargetId(ALBUM_ID);
+            albumRating.setTargetType(RatingTargetType.ALBUM);
+
+            Page<Rating> page = new PageImpl<>(List.of(trackRating, albumRating));
+
+            when(ratingRepository.findAllByUserIdAndCommentIsNotNullAndCommentIsNotEmpty(USER_ID, PAGEABLE))
+                    .thenReturn(page);
+
+            TrackEntity trackEntity = new TrackEntity();
+            trackEntity.setArtists(List.of(new ArtistRefDto("1", "TrackArtist")));
+            AlbumEntity albumEntity = new AlbumEntity();
+            albumEntity.setArtists(List.of(new ArtistRefDto("2", "AlbumArtist")));
+
+            when(metadataService.getOrFetchTracks(List.of(TRACK_ID))).thenReturn(Map.of(TRACK_ID, trackEntity));
+            when(metadataService.getOrFetchAlbums(List.of(ALBUM_ID))).thenReturn(Map.of(ALBUM_ID, albumEntity));
+
+            // When
+            PagedResponse<RatingDetailsResponse> result = ratingService.getUserComments(USER_ID, null, PAGEABLE);
+
+            // Then
+            assertThat(result.content()).hasSize(2);
+            verify(metadataService).getOrFetchTracks(anyList());
+            verify(metadataService).getOrFetchAlbums(anyList());
+        }
+
+        @Test
+        @DisplayName("Should return 'Unknown' data when metadata is missing in the service")
+        void shouldReturnUnknown_WhenMetadataNotFound() {
+            // Given
+            Rating rating = new Rating();
+            rating.setTargetId(TRACK_ID);
+            rating.setTargetType(RatingTargetType.TRACK);
+
+            when(ratingRepository.findAllByUserIdAndCommentIsNotNullAndCommentIsNotEmpty(USER_ID, PAGEABLE))
+                    .thenReturn(new PageImpl<>(List.of(rating)));
+
+            when(metadataService.getOrFetchTracks(anyList())).thenReturn(Map.of());
+
+            // When
+            PagedResponse<RatingDetailsResponse> result = ratingService.getUserComments(USER_ID, null, PAGEABLE);
+
+            // Then
+            RatingDetailsResponse details = result.content().get(0);
+            assertThat(details.title()).isEqualTo("Unknown");
+            assertThat(details.authorName()).isEqualTo("Unknown");
+            assertThat(details.imageUrl()).isNull();
+        }
+
+        @Test
+        @DisplayName("Should use filtered repository method when filterType is given")
+        void shouldCallFilteredRepository_WhenTypeIsGiven() {
+            // Given
+            RatingTargetType filter = RatingTargetType.ALBUM;
+            when(ratingRepository.findAllByUserIdAndTargetTypeAndCommentIsNotNullAndCommentIsNotEmpty(USER_ID, filter, PAGEABLE))
+                    .thenReturn(new PageImpl<>(List.of()));
+
+            // When
+            ratingService.getUserComments(USER_ID, filter, PAGEABLE);
+
+            // Then
+            verify(ratingRepository).findAllByUserIdAndTargetTypeAndCommentIsNotNullAndCommentIsNotEmpty(USER_ID, filter, PAGEABLE);
+            verify(ratingRepository, never()).findAllByUserIdAndCommentIsNotNullAndCommentIsNotEmpty(anyLong(), any());
         }
     }
 }

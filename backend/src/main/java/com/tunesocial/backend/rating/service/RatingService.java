@@ -1,9 +1,13 @@
 package com.tunesocial.backend.rating.service;
 
 import com.tunesocial.backend.common.dto.PagedResponse;
+import com.tunesocial.backend.music.model.AlbumEntity;
+import com.tunesocial.backend.music.model.RateableEntity;
+import com.tunesocial.backend.music.model.TrackEntity;
+import com.tunesocial.backend.music.service.MusicMetadataService;
 import com.tunesocial.backend.rating.dto.RateRequest;
+import com.tunesocial.backend.rating.dto.RatingDetailsResponse;
 import com.tunesocial.backend.rating.dto.RatingResponse;
-import com.tunesocial.backend.rating.exception.InvalidRatingValueException;
 import com.tunesocial.backend.rating.exception.RatingNotFoundException;
 import com.tunesocial.backend.rating.exception.RatingSummaryNotFoundException;
 import com.tunesocial.backend.rating.model.Rating;
@@ -21,6 +25,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -29,6 +34,7 @@ public class RatingService {
 
     private final RatingRepository ratingRepository;
     private final RatingSummaryRepository summaryRepository;
+    private final MusicMetadataService metadataService;
 
 
     // TODO: optionally validate external target existence via provider
@@ -175,15 +181,59 @@ public class RatingService {
     }
 
     @Transactional(readOnly = true)
-    public PagedResponse<RatingResponse> getUserComments(Long userId, Pageable pageable) {
-        Page<Rating> page = ratingRepository.findAllByUserIdAndCommentIsNotNullAndCommentIsNotEmpty(userId, pageable);
+    public PagedResponse<RatingDetailsResponse> getUserComments(Long userId, RatingTargetType filterType, Pageable pageable) {
+        Page<Rating> ratingsPage = (filterType == null)
+                ? ratingRepository.findAllByUserIdAndCommentIsNotNullAndCommentIsNotEmpty(userId, pageable)
+                : ratingRepository.findAllByUserIdAndTargetTypeAndCommentIsNotNullAndCommentIsNotEmpty(userId, filterType, pageable);
 
-        List<RatingResponse> content = page.getContent().stream()
-                .map(RatingResponse::fromEntity)
+        List<Rating> ratings = ratingsPage.getContent();
+
+
+        List<String> trackIds = ratings.stream()
+                .filter(r -> r.getTargetType() == RatingTargetType.TRACK)
+                .map(Rating::getTargetId)
                 .toList();
 
-        Integer nextPage = page.hasNext() ? page.getNumber() + 1 : null;
+        List<String> albumIds = ratings.stream()
+                .filter(r -> r.getTargetType() == RatingTargetType.ALBUM)
+                .map(Rating::getTargetId)
+                .toList();
 
-        return new PagedResponse<>(content, nextPage);
+        Map<String, TrackEntity> tracks = trackIds.isEmpty() ? Map.of() : metadataService.getOrFetchTracks(trackIds);
+        Map<String, AlbumEntity> albums = albumIds.isEmpty() ? Map.of() : metadataService.getOrFetchAlbums(albumIds);
+
+
+        List<RatingDetailsResponse> details = ratings.stream()
+                .map(r -> mapToDetails(r, tracks, albums))
+                .toList();
+
+        return new PagedResponse<>(details, ratingsPage.hasNext() ? ratingsPage.getNumber() + 1 : null);
+    }
+
+    private RatingDetailsResponse mapToDetails(Rating r, Map<String, TrackEntity> tracks, Map<String, AlbumEntity> albums) {
+        RateableEntity entity = null;
+
+        if (r.getTargetType() == RatingTargetType.TRACK) {
+            entity = tracks.get(r.getTargetId());
+        } else if (r.getTargetType() == RatingTargetType.ALBUM) {
+            entity = albums.get(r.getTargetId());
+        }
+
+        if (entity == null) {
+            return new RatingDetailsResponse(
+                    r.getId(),
+                    r.getTargetId(),
+                    r.getTargetType(),
+                    r.getValue(),
+                    r.getComment(),
+                    "Unknown",
+                    null,
+                    "Unknown",
+                    r.getCreatedAt(),
+                    r.getUpdatedAt()
+            );
+        }
+
+        return RatingDetailsResponse.fromEntities(r, entity);
     }
 }

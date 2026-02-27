@@ -28,4 +28,10 @@ public interface RatingRepository extends JpaRepository<Rating, Long> {
     Page<Rating> findAllByUserIdAndCommentIsNotNullAndCommentIsNotEmpty(
             Long userId,
             Pageable pageable);
+
+    Page<Rating> findAllByUserIdAndTargetTypeAndCommentIsNotNullAndCommentIsNotEmpty(
+            Long userId,
+            RatingTargetType targetType,
+            Pageable pageable
+    );
 }

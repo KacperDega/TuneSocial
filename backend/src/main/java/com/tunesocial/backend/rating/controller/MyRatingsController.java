@@ -1,6 +1,7 @@
 package com.tunesocial.backend.rating.controller;
 
 import com.tunesocial.backend.common.dto.PagedResponse;
+import com.tunesocial.backend.rating.dto.RatingDetailsResponse;
 import com.tunesocial.backend.rating.dto.RatingResponse;
 import com.tunesocial.backend.rating.exception.RatingNotFoundException;
 import com.tunesocial.backend.rating.model.Rating;
@@ -39,6 +40,7 @@ public class MyRatingsController {
                 );
     }
 
+    // TODO: PAGING
     @GetMapping()
     public List<RatingResponse> getMyRatings(Authentication authentication) {
 
@@ -52,12 +54,13 @@ public class MyRatingsController {
     }
 
     @GetMapping("/reviews")
-    public ResponseEntity<PagedResponse<RatingResponse>> getMyReviews(
+    public ResponseEntity<PagedResponse<RatingDetailsResponse>> getMyReviews(
             Authentication authentication,
+            @RequestParam(required = false) RatingTargetType type,
             @PageableDefault(size = 10, sort = "updatedAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
         Long currentUserId = userService.getCurrentUserIdOrThrow(authentication);
 
-        return ResponseEntity.ok(ratingService.getUserComments(currentUserId, pageable));
+        return ResponseEntity.ok(ratingService.getUserComments(currentUserId, type, pageable));
     }
 }

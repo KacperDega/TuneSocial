@@ -15,6 +15,8 @@ import com.tunesocial.backend.rating.model.RatingSummary;
 import com.tunesocial.backend.rating.model.RatingTargetType;
 import com.tunesocial.backend.rating.repository.RatingRepository;
 import com.tunesocial.backend.rating.repository.RatingSummaryRepository;
+import com.tunesocial.backend.user.User;
+import com.tunesocial.backend.user.UserService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -24,9 +26,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -35,6 +35,7 @@ public class RatingService {
     private final RatingRepository ratingRepository;
     private final RatingSummaryRepository summaryRepository;
     private final MusicMetadataService metadataService;
+    private final UserService userService;
 
 
     // TODO: optionally validate external target existence via provider
@@ -186,31 +187,38 @@ public class RatingService {
                 ? ratingRepository.findAllByUserIdAndCommentIsNotNullAndCommentIsNotEmpty(userId, pageable)
                 : ratingRepository.findAllByUserIdAndTargetTypeAndCommentIsNotNullAndCommentIsNotEmpty(userId, filterType, pageable);
 
+        return convertToPagedResponse(ratingsPage);
+    }
+
+    private PagedResponse<RatingDetailsResponse> convertToPagedResponse(Page<Rating> ratingsPage) {
         List<Rating> ratings = ratingsPage.getContent();
 
+        Set<String> trackIds = new HashSet<>();
+        Set<String> albumIds = new HashSet<>();
+        Set<Long> userIds = new HashSet<>();
 
-        List<String> trackIds = ratings.stream()
-                .filter(r -> r.getTargetType() == RatingTargetType.TRACK)
-                .map(Rating::getTargetId)
-                .toList();
+        for (Rating r : ratings) {
+            userIds.add(r.getUserId());
+            if (r.getTargetType() == RatingTargetType.TRACK) {
+                trackIds.add(r.getTargetId());
+            } else if (r.getTargetType() == RatingTargetType.ALBUM) {
+                albumIds.add(r.getTargetId());
+            }
+        }
 
-        List<String> albumIds = ratings.stream()
-                .filter(r -> r.getTargetType() == RatingTargetType.ALBUM)
-                .map(Rating::getTargetId)
-                .toList();
-
-        Map<String, TrackEntity> tracks = trackIds.isEmpty() ? Map.of() : metadataService.getOrFetchTracks(trackIds);
-        Map<String, AlbumEntity> albums = albumIds.isEmpty() ? Map.of() : metadataService.getOrFetchAlbums(albumIds);
+        Map<String, TrackEntity> tracks = trackIds.isEmpty() ? Map.of() : metadataService.getOrFetchTracks(new ArrayList<>(trackIds));
+        Map<String, AlbumEntity> albums = albumIds.isEmpty() ? Map.of() : metadataService.getOrFetchAlbums(new ArrayList<>(albumIds));
+        Map<Long, String> usernames = userService.getUsernamesByIds(userIds);
 
 
         List<RatingDetailsResponse> details = ratings.stream()
-                .map(r -> mapToDetails(r, tracks, albums))
+                .map(r -> mapToDetails(r, tracks, albums, usernames))
                 .toList();
 
         return new PagedResponse<>(details, ratingsPage.hasNext() ? ratingsPage.getNumber() + 1 : null);
     }
 
-    private RatingDetailsResponse mapToDetails(Rating r, Map<String, TrackEntity> tracks, Map<String, AlbumEntity> albums) {
+    private RatingDetailsResponse mapToDetails(Rating r, Map<String, TrackEntity> tracks, Map<String, AlbumEntity> albums, Map<Long, String> usernames) {
         RateableEntity entity = null;
 
         if (r.getTargetType() == RatingTargetType.TRACK) {
@@ -219,6 +227,8 @@ public class RatingService {
             entity = albums.get(r.getTargetId());
         }
 
+        String username = usernames.get(r.getUserId());
+
         if (entity == null) {
             return new RatingDetailsResponse(
                     r.getId(),
@@ -226,6 +236,8 @@ public class RatingService {
                     r.getTargetType(),
                     r.getValue(),
                     r.getComment(),
+                    r.getUserId(),
+                    "User_" + r.getUserId(),
                     "Unknown",
                     null,
                     "Unknown",
@@ -234,6 +246,6 @@ public class RatingService {
             );
         }
 
-        return RatingDetailsResponse.fromEntities(r, entity);
+        return RatingDetailsResponse.fromEntities(r, entity, username);
     }
 }

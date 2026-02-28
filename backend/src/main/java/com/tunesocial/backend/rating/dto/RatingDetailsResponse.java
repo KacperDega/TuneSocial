@@ -15,6 +15,9 @@ public record RatingDetailsResponse(
         int value,
         String comment,
 
+        Long userId,
+        String username,
+
         String title,
         String imageUrl,
         String authorName,
@@ -22,10 +25,12 @@ public record RatingDetailsResponse(
         Instant createdAt,
         Instant updatedAt
 ) {
-    public static RatingDetailsResponse fromEntities(Rating rating, RateableEntity rateableEntity) {
+    public static RatingDetailsResponse fromEntities(Rating rating, RateableEntity rateableEntity, String username) {
         String title = rateableEntity.getTitle() == null ? "Unknown" : rateableEntity.getTitle();
         String artists = rateableEntity.getArtists().stream().map(ArtistRefDto::name).collect(Collectors.joining(", "));
         artists = artists.isEmpty() ? "Unknown" : artists;
+
+        String finalUsername = (username == null || username.isEmpty()) ? "User_" + rating.getUserId() : username;
 
         return new RatingDetailsResponse(
                 rating.getId(),
@@ -33,6 +38,9 @@ public record RatingDetailsResponse(
                 rating.getTargetType(),
                 rating.getValue(),
                 rating.getComment(),
+
+                rating.getUserId(),
+                finalUsername,
 
                 title,
                 rateableEntity.getImageUrl(),

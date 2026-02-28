@@ -50,11 +50,11 @@ public class RatingController {
         return RatingSummaryResponse.fromEntity(summary);
     }
 
-    @GetMapping("/{type}/{targetId}/reviews")
+    @GetMapping("/reviews/{type}/{targetId}")
     public ResponseEntity<PagedResponse<RatingResponse>> getReviews(
             @PathVariable RatingTargetType type,
             @PathVariable String targetId,
-            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+            @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
         return ResponseEntity.ok(ratingService.getCommentsPageForTarget(targetId, type, pageable));
     }

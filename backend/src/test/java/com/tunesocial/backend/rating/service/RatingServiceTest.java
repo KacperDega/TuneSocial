@@ -14,6 +14,7 @@ import com.tunesocial.backend.rating.model.RatingSummary;
 import com.tunesocial.backend.rating.model.RatingTargetType;
 import com.tunesocial.backend.rating.repository.RatingRepository;
 import com.tunesocial.backend.rating.repository.RatingSummaryRepository;
+import com.tunesocial.backend.user.UserService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -30,6 +31,7 @@ import org.springframework.security.access.AccessDeniedException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -47,6 +49,9 @@ class RatingServiceTest {
 
     @Mock
     private MusicMetadataService metadataService;
+
+    @Mock
+    private UserService userService;
 
     @InjectMocks
     private RatingService ratingService;
@@ -318,10 +323,12 @@ class RatingServiceTest {
             // Given
             Rating trackRating = new Rating();
             trackRating.setTargetId(TRACK_ID);
+            trackRating.setUserId(USER_ID);
             trackRating.setTargetType(RatingTargetType.TRACK);
 
             Rating albumRating = new Rating();
             albumRating.setTargetId(ALBUM_ID);
+            albumRating.setUserId(USER_ID);
             albumRating.setTargetType(RatingTargetType.ALBUM);
 
             Page<Rating> page = new PageImpl<>(List.of(trackRating, albumRating));
@@ -336,12 +343,15 @@ class RatingServiceTest {
 
             when(metadataService.getOrFetchTracks(List.of(TRACK_ID))).thenReturn(Map.of(TRACK_ID, trackEntity));
             when(metadataService.getOrFetchAlbums(List.of(ALBUM_ID))).thenReturn(Map.of(ALBUM_ID, albumEntity));
+            when(userService.getUsernamesByIds(anySet())).thenReturn(Map.of(USER_ID, "TestUser"));
 
             // When
             PagedResponse<RatingDetailsResponse> result = ratingService.getUserComments(USER_ID, null, PAGEABLE);
 
             // Then
             assertThat(result.content()).hasSize(2);
+            assertThat(result.content().get(0).username()).isEqualTo("TestUser");
+            verify(userService).getUsernamesByIds(anySet());
             verify(metadataService).getOrFetchTracks(anyList());
             verify(metadataService).getOrFetchAlbums(anyList());
         }
@@ -383,6 +393,31 @@ class RatingServiceTest {
             // Then
             verify(ratingRepository).findAllByUserIdAndTargetTypeAndCommentIsNotNullAndCommentIsNotEmpty(USER_ID, filter, PAGEABLE);
             verify(ratingRepository, never()).findAllByUserIdAndCommentIsNotNullAndCommentIsNotEmpty(anyLong(), any());
+        }
+
+        @Test
+        @DisplayName("Should fallback to 'User_ID' when username is missing in UserService")
+        void shouldFallbackToUserId_WhenUsernameNotFound() {
+            // Given
+            Rating rating = new Rating();
+            rating.setUserId(999L);
+            rating.setTargetId(TRACK_ID);
+            rating.setTargetType(RatingTargetType.TRACK);
+
+            when(ratingRepository.findAllByUserIdAndCommentIsNotNullAndCommentIsNotEmpty(anyLong(), any()))
+                    .thenReturn(new PageImpl<>(List.of(rating)));
+
+            when(userService.getUsernamesByIds(anySet())).thenReturn(Map.of());
+
+            TrackEntity track = new TrackEntity();
+            track.setArtists(List.of());
+            when(metadataService.getOrFetchTracks(anyList())).thenReturn(Map.of(TRACK_ID, track));
+
+            // When
+            PagedResponse<RatingDetailsResponse> result = ratingService.getUserComments(USER_ID, null, PAGEABLE);
+
+            // Then
+            assertThat(result.content().get(0).username()).isEqualTo("User_999");
         }
     }
 }

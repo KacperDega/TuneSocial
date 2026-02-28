@@ -7,6 +7,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -35,12 +38,11 @@ public class UserService {
         return principal.getId();
     }
 
-    public User create(CreateUserRequest req) {
-        User user = new User();
-        user.setUsername(req.username());
-        user.setEmail(req.email());
-        user.setPasswordHash(passwordEncoder.encode(req.password()));
-        return userRepository.save(user);
+    public Map<Long, String> getUsernamesByIds(Set<Long> userIds) {
+        if (userIds.isEmpty()) return Map.of();
+
+        return userRepository.findAllById(userIds).stream()
+                .collect(Collectors.toMap(User::getId, User::getUsername));
     }
 
     public List<User> getAll() {
@@ -49,6 +51,14 @@ public class UserService {
 
     public User getById(Long id) {
         return userRepository.findById(id).orElseThrow();
+    }
+
+    public User create(CreateUserRequest req) {
+        User user = new User();
+        user.setUsername(req.username());
+        user.setEmail(req.email());
+        user.setPasswordHash(passwordEncoder.encode(req.password()));
+        return userRepository.save(user);
     }
 
     public User update(Long id, CreateUserRequest req) {

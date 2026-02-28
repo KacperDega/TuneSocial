@@ -34,4 +34,6 @@ public interface RatingRepository extends JpaRepository<Rating, Long> {
             RatingTargetType targetType,
             Pageable pageable
     );
+
+    Page<Rating> findByCommentIsNotNullAndCommentNotEmptyOrderByCreatedAtDesc(Pageable pageable);
 }

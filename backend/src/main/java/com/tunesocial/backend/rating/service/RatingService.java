@@ -190,6 +190,15 @@ public class RatingService {
         return convertToPagedResponse(ratingsPage);
     }
 
+    @Transactional(readOnly = true)
+    public PagedResponse<RatingDetailsResponse> getGlobalReviews(Pageable pageable) {
+        Page<Rating> ratingsPage = ratingRepository.findByCommentIsNotNullAndCommentNotEmptyOrderByCreatedAtDesc(pageable);
+
+        return convertToPagedResponse(ratingsPage);
+    }
+
+
+
     private PagedResponse<RatingDetailsResponse> convertToPagedResponse(Page<Rating> ratingsPage) {
         List<Rating> ratings = ratingsPage.getContent();
 

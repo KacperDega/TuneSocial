@@ -33,7 +33,7 @@ public class Rating {
     @Enumerated(EnumType.STRING)
     private RatingTargetType targetType;
 
-    private int value;
+    private int ratingValue;
 
     @Column(length = 1000)
     private String comment;

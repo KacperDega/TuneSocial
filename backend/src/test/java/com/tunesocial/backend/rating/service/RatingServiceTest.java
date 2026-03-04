@@ -31,7 +31,6 @@ import org.springframework.security.access.AccessDeniedException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -91,7 +90,7 @@ class RatingServiceTest {
         void shouldUpdateExistingRating_whenRatingExists() {
             // Given
             Rating existing = new Rating();
-            existing.setValue(5);
+            existing.setRatingValue(5);
             existing.setTargetId(TRACK_ID);
             existing.setTargetType(TYPE);
 
@@ -109,7 +108,7 @@ class RatingServiceTest {
             ratingService.rate(USER_ID, request);
 
             // Then
-            assertThat(existing.getValue()).isEqualTo(newValue);
+            assertThat(existing.getRatingValue()).isEqualTo(newValue);
             verify(summaryRepository).updateSummary(TRACK_ID, TYPE, 0, newValue - 5);
         }
 
@@ -172,7 +171,7 @@ class RatingServiceTest {
             rating.setUserId(USER_ID);
             rating.setTargetId(TRACK_ID);
             rating.setTargetType(TYPE);
-            rating.setValue(6);
+            rating.setRatingValue(6);
 
             RatingSummary summary = new RatingSummary();
             summary.setTargetId(TRACK_ID);
@@ -246,7 +245,7 @@ class RatingServiceTest {
         void shouldReturnValue_whenRatingExists() {
             // Given
             Rating rating = new Rating();
-            rating.setValue(7);
+            rating.setRatingValue(7);
 
             when(ratingRepository.findByUserIdAndTargetIdAndTargetType(USER_ID, TRACK_ID, TYPE))
                     .thenReturn(Optional.of(rating));

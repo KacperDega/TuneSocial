@@ -17,7 +17,7 @@ public record RatingResponse(
         return new RatingResponse(
                 rating.getId(),
                 rating.getTargetId(),
-                rating.getValue(),
+                rating.getRatingValue(),
                 rating.getComment(),
                 rating.getCreatedAt(),
                 rating.getUpdatedAt()

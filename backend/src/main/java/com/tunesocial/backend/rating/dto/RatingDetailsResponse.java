@@ -36,7 +36,7 @@ public record RatingDetailsResponse(
                 rating.getId(),
                 rating.getTargetId(),
                 rating.getTargetType(),
-                rating.getValue(),
+                rating.getRatingValue(),
                 rating.getComment(),
 
                 rating.getUserId(),

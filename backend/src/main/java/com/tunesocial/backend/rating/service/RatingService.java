@@ -15,7 +15,6 @@ import com.tunesocial.backend.rating.model.RatingSummary;
 import com.tunesocial.backend.rating.model.RatingTargetType;
 import com.tunesocial.backend.rating.repository.RatingRepository;
 import com.tunesocial.backend.rating.repository.RatingSummaryRepository;
-import com.tunesocial.backend.user.User;
 import com.tunesocial.backend.user.UserService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -74,7 +73,7 @@ public class RatingService {
                         )
                 );
 
-        summaryRepository.updateSummary(summary.getTargetId(), summary.getTargetType(), -1, -rating.getValue());
+        summaryRepository.updateSummary(summary.getTargetId(), summary.getTargetType(), -1, -rating.getRatingValue());
         ratingRepository.delete(rating);
     }
 
@@ -119,7 +118,7 @@ public class RatingService {
         rating.setUserId(userId);
         rating.setTargetId(request.targetId());
         rating.setTargetType(request.targetType());
-        rating.setValue(request.value());
+        rating.setRatingValue(request.value());
         rating.setComment(request.comment());
 
         rating.setCreatedAt(Instant.now());
@@ -131,8 +130,8 @@ public class RatingService {
     }
 
     private void updateExistingRating(Rating rating, int newValue, String comment) {
-        int oldValue = rating.getValue();
-        rating.setValue(newValue);
+        int oldValue = rating.getRatingValue();
+        rating.setRatingValue(newValue);
 
         if (rating.getComment() == null || !rating.getComment().equals(comment)) {
             rating.setComment(comment);
@@ -152,7 +151,7 @@ public class RatingService {
 
         return ratingRepository
                 .findByUserIdAndTargetIdAndTargetType(userId, targetId, type)
-                .map(Rating::getValue)
+                .map(Rating::getRatingValue)
                 .orElse(null);
     }
 
@@ -243,7 +242,7 @@ public class RatingService {
                     r.getId(),
                     r.getTargetId(),
                     r.getTargetType(),
-                    r.getValue(),
+                    r.getRatingValue(),
                     r.getComment(),
                     r.getUserId(),
                     "User_" + r.getUserId(),

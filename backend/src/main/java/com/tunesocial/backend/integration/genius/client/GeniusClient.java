@@ -11,11 +11,12 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriBuilder;
 import reactor.core.publisher.Mono;
 
+import java.net.URI;
 import java.time.Duration;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.function.Consumer;
+import java.util.function.Function;
 
 @Component
 @RequiredArgsConstructor
@@ -28,14 +29,11 @@ public class GeniusClient {
     private final WebClient geniusWebApiClient;
 
 
-    // TODO: refactor fetch methods DRY
-    private <T> T fetch(Class<T> responseType, Consumer<UriBuilder> uriFunction, String context) {
+    // TODO: refactor fetch and fetchFromWebApiById methods
+    private <T> T fetch(Class<T> responseType, Function<UriBuilder, URI> uriFunction, String context) {
         return execute(
                 geniusApiClient.get()
-                        .uri(uriBuilder -> {
-                            uriFunction.accept(uriBuilder);
-                            return uriBuilder.build();
-                        })
+                        .uri(uriFunction)
                         .header("Authorization", "Bearer " + token)
                         .retrieve()
                         .onStatus(
@@ -89,7 +87,7 @@ public class GeniusClient {
     public GeniusSearchApiResponse searchGenius(String query) {
         return fetch(
                 GeniusSearchApiResponse.class,
-                uri -> uri.path("/search").queryParam("q", query),
+                uri -> uri.path("/search").queryParam("q", query).build(),
                 query
         );
     }
@@ -145,13 +143,13 @@ public class GeniusClient {
             return fallback;
         }
 
-        //seconds
+        // retryAfter is seconds
         try {
             return Long.parseLong(header);
         } catch (NumberFormatException ignored) {
         }
 
-        // date
+        // retryAfter is date
         try {
             ZonedDateTime retryTime = ZonedDateTime.parse(
                     header,

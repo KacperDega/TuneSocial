@@ -1,4 +1,4 @@
-package com.tunesocial.backend.user;
+package com.tunesocial.backend.user.model;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnore;

@@ -1,6 +1,7 @@
 package com.tunesocial.backend.user;
 
 import com.tunesocial.backend.user.dto.CreateUserRequest;
+import com.tunesocial.backend.user.model.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;

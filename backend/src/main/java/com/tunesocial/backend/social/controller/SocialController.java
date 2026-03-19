@@ -4,7 +4,7 @@ import com.tunesocial.backend.social.dto.ReactionRequest;
 import com.tunesocial.backend.social.dto.ReactionsSummary;
 import com.tunesocial.backend.social.model.enums.ReactionTargetType;
 import com.tunesocial.backend.social.service.SocialService;
-import com.tunesocial.backend.user.User;
+import com.tunesocial.backend.user.model.User;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

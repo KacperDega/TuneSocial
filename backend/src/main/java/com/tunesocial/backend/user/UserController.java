@@ -3,7 +3,9 @@ package com.tunesocial.backend.user;
 
 import com.tunesocial.backend.user.dto.CreateUserRequest;
 import com.tunesocial.backend.user.dto.UserResponse;
+import com.tunesocial.backend.user.model.User;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,6 +14,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor
+@Slf4j
 public class UserController {
 
     private final UserMapper userMapper;
@@ -45,9 +48,11 @@ public class UserController {
         userService.delete(id);
     }
 
-    @GetMapping("/me")
+    @GetMapping("/me/me")
     public UserResponse me(Authentication auth) {
         User currentUser = (User) auth.getPrincipal();
+        log.info("Current User: {}", currentUser.toString());
+        log.info("Current User ID: {}", currentUser.getId());
 
         return userMapper.toUserResponse(currentUser);
     }

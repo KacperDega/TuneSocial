@@ -4,7 +4,7 @@ import com.tunesocial.backend.common.dto.PagedResponse;
 import com.tunesocial.backend.social.dto.CommentResponse;
 import com.tunesocial.backend.social.dto.CreateCommentRequest;
 import com.tunesocial.backend.social.service.CommentService;
-import com.tunesocial.backend.user.User;
+import com.tunesocial.backend.user.model.User;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;

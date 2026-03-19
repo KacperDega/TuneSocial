@@ -1,6 +1,7 @@
 package com.tunesocial.backend.user;
 
 import com.tunesocial.backend.user.dto.UserResponse;
+import com.tunesocial.backend.user.model.User;
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")

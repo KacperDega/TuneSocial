@@ -7,7 +7,7 @@ import com.tunesocial.backend.auth.exception.EmailAlreadyExistsException;
 import com.tunesocial.backend.auth.exception.InvalidCredentialsException;
 import com.tunesocial.backend.auth.exception.UsernameAlreadyExistsException;
 import com.tunesocial.backend.common.security.jwt.JwtService;
-import com.tunesocial.backend.user.User;
+import com.tunesocial.backend.user.model.User;
 import com.tunesocial.backend.user.UserRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

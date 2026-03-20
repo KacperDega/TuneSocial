@@ -22,9 +22,6 @@ public class User {
     @Column(nullable = false, unique = true)
     private String username; // @username
 
-    @Column(nullable = false)
-    private String displayName;
-
     @JsonIgnore
     @Column(nullable = false)
     private String passwordHash;

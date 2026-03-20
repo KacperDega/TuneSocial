@@ -20,6 +20,9 @@ public class UserProfile {
     @JoinColumn(name = "user_id")
     private User user;
 
+    @Column(nullable = false)
+    private String displayName;
+
     @Column(length = 500)
     private String bio;
 

@@ -46,13 +46,13 @@ public class AuthService {
         User user = new User();
         user.setUsername(req.username());
         user.setEmail(req.email());
-        user.setDisplayName(req.displayName());
         user.setPasswordHash(passwordEncoder.encode(req.password()));
 
         User savedUser = userRepository.save(user);
 
         UserProfile profile = new UserProfile();
         profile.setUser(savedUser);
+        profile.setDisplayName(req.displayName());
         profile.setAvatarId(1);
         userProfileRepository.save(profile);
 

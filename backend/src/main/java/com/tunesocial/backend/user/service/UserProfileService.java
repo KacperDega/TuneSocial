@@ -2,6 +2,7 @@ package com.tunesocial.backend.user.service;
 
 import com.tunesocial.backend.user.dto.UpdateProfileRequest;
 import com.tunesocial.backend.user.dto.UserProfileResponse;
+import com.tunesocial.backend.user.mapper.UserMapper;
 import com.tunesocial.backend.user.model.User;
 import com.tunesocial.backend.user.model.UserProfile;
 import com.tunesocial.backend.user.repository.UserProfileRepository;
@@ -18,6 +19,7 @@ public class UserProfileService {
 
     private final UserProfileRepository profileRepository;
     private final UserRepository userRepository;
+    private final UserMapper userMapper;
 
     // TODO: EXCEPTIONS
 
@@ -37,15 +39,7 @@ public class UserProfileService {
         UserProfile profile = profileRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Profile not found"));
 
-        if (request.bio() != null) {
-            profile.setBio(request.bio());
-        }
-        if (request.avatarId() != null) {
-            profile.setAvatarId(request.avatarId());
-        }
-        if (request.birthDate() != null) {
-            profile.setBirthDate(request.birthDate());
-        }
+        userMapper.updateProfileFromDto(request, profile);
 
         UserProfile updatedProfile = profileRepository.save(profile);
         log.info("User profile updated successfully for userId: {}", userId);

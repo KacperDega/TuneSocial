@@ -1,9 +1,11 @@
-package com.tunesocial.backend.user;
+package com.tunesocial.backend.user.service;
 
 import com.tunesocial.backend.user.dto.UpdateProfileRequest;
 import com.tunesocial.backend.user.dto.UserProfileResponse;
 import com.tunesocial.backend.user.model.User;
 import com.tunesocial.backend.user.model.UserProfile;
+import com.tunesocial.backend.user.repository.UserProfileRepository;
+import com.tunesocial.backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

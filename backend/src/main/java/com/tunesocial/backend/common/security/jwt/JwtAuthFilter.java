@@ -1,7 +1,7 @@
 package com.tunesocial.backend.common.security.jwt;
 
 import com.tunesocial.backend.user.model.User;
-import com.tunesocial.backend.user.UserRepository;
+import com.tunesocial.backend.user.repository.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

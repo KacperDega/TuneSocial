@@ -1,5 +1,6 @@
-package com.tunesocial.backend.user;
+package com.tunesocial.backend.user.controller;
 
+import com.tunesocial.backend.user.service.UserProfileService;
 import com.tunesocial.backend.user.dto.UpdateProfileRequest;
 import com.tunesocial.backend.user.dto.UserProfileResponse;
 import com.tunesocial.backend.user.model.User;

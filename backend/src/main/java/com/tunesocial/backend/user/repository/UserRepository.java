@@ -1,4 +1,4 @@
-package com.tunesocial.backend.user;
+package com.tunesocial.backend.user.repository;
 
 import com.tunesocial.backend.user.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;

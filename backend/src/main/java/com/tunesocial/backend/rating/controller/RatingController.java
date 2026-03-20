@@ -8,7 +8,7 @@ import com.tunesocial.backend.rating.dto.RatingSummaryResponse;
 import com.tunesocial.backend.rating.model.RatingSummary;
 import com.tunesocial.backend.rating.model.RatingTargetType;
 import com.tunesocial.backend.rating.service.RatingService;
-import com.tunesocial.backend.user.UserService;
+import com.tunesocial.backend.user.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;

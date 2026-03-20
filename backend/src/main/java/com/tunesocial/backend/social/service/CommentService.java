@@ -8,7 +8,7 @@ import com.tunesocial.backend.social.exception.SocialResourceNotFoundException;
 import com.tunesocial.backend.social.model.PostComment;
 import com.tunesocial.backend.social.model.enums.ReactionTargetType;
 import com.tunesocial.backend.social.repository.PostCommentRepository;
-import com.tunesocial.backend.user.UserService;
+import com.tunesocial.backend.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

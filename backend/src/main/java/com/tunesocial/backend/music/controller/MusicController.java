@@ -2,7 +2,7 @@ package com.tunesocial.backend.music.controller;
 
 import com.tunesocial.backend.music.dto.*;
 import com.tunesocial.backend.music.service.MusicService;
-import com.tunesocial.backend.user.UserService;
+import com.tunesocial.backend.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;

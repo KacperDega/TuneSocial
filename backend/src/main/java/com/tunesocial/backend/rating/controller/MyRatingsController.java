@@ -7,7 +7,7 @@ import com.tunesocial.backend.rating.exception.RatingNotFoundException;
 import com.tunesocial.backend.rating.model.Rating;
 import com.tunesocial.backend.rating.model.RatingTargetType;
 import com.tunesocial.backend.rating.service.RatingService;
-import com.tunesocial.backend.user.UserService;
+import com.tunesocial.backend.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;

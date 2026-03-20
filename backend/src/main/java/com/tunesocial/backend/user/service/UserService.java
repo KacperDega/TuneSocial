@@ -1,7 +1,8 @@
-package com.tunesocial.backend.user;
+package com.tunesocial.backend.user.service;
 
 import com.tunesocial.backend.user.dto.CreateUserRequest;
 import com.tunesocial.backend.user.model.User;
+import com.tunesocial.backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -18,6 +19,16 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+
+//    public User getCurrentUser(Authentication authentication) {
+//        if (authentication == null || !authentication.isAuthenticated()) {
+//            throw new IllegalStateException("No authenticated user");
+//        }
+//
+//        Object principal = authentication.getPrincipal();
+//
+//        return (User) principal;
+//    }
 
     public Long getCurrentUserIdOrThrow(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -39,6 +50,8 @@ public class UserService {
         return principal.getId();
     }
 
+
+    // TODO: userRefDto to return username + avatarId
     public Map<Long, String> getUsernamesByIds(Set<Long> userIds) {
         if (userIds.isEmpty()) return Map.of();
 

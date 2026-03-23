@@ -1,5 +1,7 @@
 package com.tunesocial.backend.user.model;
 
+import com.tunesocial.backend.user.model.enums.BirthDateVisibility;
+import com.tunesocial.backend.user.model.enums.ProfileVisibility;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -30,9 +32,19 @@ public class UserProfile {
 
     private LocalDate birthDate;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private BirthDateVisibility birthDateVisibility = BirthDateVisibility.YEAR_ONLY;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ProfileVisibility profileVisibility = ProfileVisibility.PUBLIC;
+
+
     private Instant updatedAt;
 
     @PreUpdate
+    @PrePersist
     protected void onUpdate() {
         this.updatedAt = Instant.now();
     }

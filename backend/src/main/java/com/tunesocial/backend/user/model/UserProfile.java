@@ -28,7 +28,7 @@ public class UserProfile {
     @Column(length = 500)
     private String bio;
 
-    private Integer avatarId;
+    private Integer avatarId = 1;
 
     private LocalDate birthDate;
 

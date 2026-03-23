@@ -53,7 +53,6 @@ public class AuthService {
         UserProfile profile = new UserProfile();
         profile.setUser(savedUser);
         profile.setDisplayName(req.displayName());
-        profile.setAvatarId(1);
         userProfileRepository.save(profile);
 
         String token = jwtService.generateToken(user.getId());

@@ -3,6 +3,7 @@ package com.tunesocial.backend.user.service;
 import com.tunesocial.backend.user.dto.UpdateProfileRequest;
 import com.tunesocial.backend.user.dto.UserProfileResponse;
 import com.tunesocial.backend.user.mapper.UserMapper;
+import com.tunesocial.backend.user.mapper.UserProfileMapper;
 import com.tunesocial.backend.user.model.User;
 import com.tunesocial.backend.user.model.UserProfile;
 import com.tunesocial.backend.user.repository.UserProfileRepository;
@@ -20,18 +21,19 @@ public class UserProfileService {
     private final UserProfileRepository profileRepository;
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final UserProfileMapper userProfileMapper;
 
     // TODO: EXCEPTIONS
 
     @Transactional(readOnly = true)
-    public UserProfileResponse getProfileByUsername(String username) {
+    public UserProfileResponse getProfileByUsername(String username, Long currentUserId) {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("Username not found"));
+                .orElseThrow(() -> new RuntimeException("User not found: " + username));
 
         UserProfile profile = profileRepository.findById(user.getId())
                 .orElseThrow(() -> new RuntimeException("Profile not found for user: " + username));
 
-        return UserProfileResponse.fromEntity(profile);
+        return userProfileMapper.toResponse(profile, currentUserId);
     }
 
     @Transactional
@@ -44,6 +46,6 @@ public class UserProfileService {
         UserProfile updatedProfile = profileRepository.save(profile);
         log.info("User profile updated successfully for userId: {}", userId);
 
-        return UserProfileResponse.fromEntity(updatedProfile);
+        return userProfileMapper.toResponse(updatedProfile, userId);
     }
 }

@@ -18,8 +18,12 @@ public class UserProfileController {
     private final UserProfileService profileService;
 
     @GetMapping("/{username}")
-    public ResponseEntity<UserProfileResponse> getProfile(@PathVariable String username) {
-        return ResponseEntity.ok(profileService.getProfileByUsername(username));
+    public ResponseEntity<UserProfileResponse> getProfile(
+            @PathVariable String username,
+            @AuthenticationPrincipal User user) {
+
+        Long currentUserId = (user != null) ? user.getId() : null;
+        return ResponseEntity.ok(profileService.getProfileByUsername(username, currentUserId));
     }
 
     @PutMapping("/me")

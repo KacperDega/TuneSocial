@@ -42,10 +42,16 @@ public class UserProfile {
 
 
     private Instant updatedAt;
+    private Instant createdAt;
 
     @PreUpdate
-    @PrePersist
     protected void onUpdate() {
+        this.updatedAt = Instant.now();
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = Instant.now();
         this.updatedAt = Instant.now();
     }
 }

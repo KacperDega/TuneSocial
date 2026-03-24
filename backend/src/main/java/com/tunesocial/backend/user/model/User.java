@@ -6,6 +6,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.Instant;
+
 @Entity
 @Table(name = "users")
 @Setter
@@ -25,5 +27,12 @@ public class User {
     @JsonIgnore
     @Column(nullable = false)
     private String passwordHash;
+
+    Instant createdAt = Instant.now();
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = Instant.now();
+    }
 }
 

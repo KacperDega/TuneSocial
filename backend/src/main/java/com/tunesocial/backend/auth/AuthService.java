@@ -44,15 +44,15 @@ public class AuthService {
         }
 
         User user = new User();
-        user.setUsername(req.username());
-        user.setEmail(req.email());
+        user.setUsername(req.username().trim().toLowerCase());
+        user.setEmail(req.email().trim().toLowerCase());
         user.setPasswordHash(passwordEncoder.encode(req.password()));
 
         User savedUser = userRepository.save(user);
 
         UserProfile profile = new UserProfile();
         profile.setUser(savedUser);
-        profile.setDisplayName(req.displayName());
+        profile.setDisplayName(req.displayName().trim());
         userProfileRepository.save(profile);
 
         String token = jwtService.generateToken(user.getId());

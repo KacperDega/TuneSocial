@@ -42,6 +42,7 @@ public class UserProfileService {
                 .orElseThrow(() -> new RuntimeException("Profile not found"));
 
         userMapper.updateProfileFromDto(request, profile);
+        profile.setDisplayName(profile.getDisplayName().trim());
 
         UserProfile updatedProfile = profileRepository.save(profile);
         log.info("User profile updated successfully for userId: {}", userId);

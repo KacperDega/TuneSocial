@@ -8,5 +8,7 @@ public record UserProfileResponse(
         String email,
         String bio,
         Integer avatarId,
-        String birthDate
+        String birthDate,
+        boolean isSetup,
+        Instant createdAt
 ) {}

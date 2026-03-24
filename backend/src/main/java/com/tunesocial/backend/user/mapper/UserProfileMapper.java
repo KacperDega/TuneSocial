@@ -11,6 +11,8 @@ import java.time.LocalDate;
 @Component
 public class UserProfileMapper {
 
+
+    // TODO: when isSetup == 0
     public UserProfileResponse toResponse(UserProfile profile, Long currentUserId) {
         Long ownerId = profile.getId();
         boolean isOwner = currentUserId != null && currentUserId.equals(ownerId);
@@ -39,10 +41,12 @@ public class UserProfileMapper {
         return new UserProfileResponse(
                 profile.getId(),
                 profile.getUser().getUsername(),
-                isOwner ? profile.getUser().getEmail() : null, // owner only
+                isOwner ? profile.getUser().getEmail() : null, // email for owner only
                 profile.getBio(),
                 profile.getAvatarId(),
-                formattedBirthDate
+                formattedBirthDate,
+                profile.isSetup(),
+                profile.getCreatedAt()
         );
     }
 
@@ -54,7 +58,9 @@ public class UserProfileMapper {
                 null,
                 "This profile is private.",
                 profile.getAvatarId(),
-                null
+                null,
+                profile.isSetup(),
+                profile.getCreatedAt()
         );
     }
 

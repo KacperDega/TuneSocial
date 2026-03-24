@@ -40,6 +40,8 @@ public class UserProfile {
     @Column(nullable = false)
     private ProfileVisibility profileVisibility = ProfileVisibility.PUBLIC;
 
+    @Column(nullable = false)
+    private boolean isSetup = false;
 
     private Instant updatedAt;
     private Instant createdAt;

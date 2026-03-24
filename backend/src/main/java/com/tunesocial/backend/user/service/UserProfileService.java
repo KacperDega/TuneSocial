@@ -1,5 +1,6 @@
 package com.tunesocial.backend.user.service;
 
+import com.tunesocial.backend.user.dto.SetupProfileRequest;
 import com.tunesocial.backend.user.dto.UpdateProfileRequest;
 import com.tunesocial.backend.user.dto.UserProfileResponse;
 import com.tunesocial.backend.user.mapper.UserMapper;
@@ -48,5 +49,27 @@ public class UserProfileService {
         log.info("User profile updated successfully for userId: {}", userId);
 
         return userProfileMapper.toResponse(updatedProfile, userId);
+    }
+
+    @Transactional
+    public UserProfileResponse setupProfile(Long userId, SetupProfileRequest request) {
+        UserProfile profile = profileRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Profile not found"));
+
+        if (profile.isSetup()) {
+            throw new IllegalStateException("Profile has already been set up. Use update instead.");
+        }
+
+        profile.setDisplayName(request.displayName().trim());
+        profile.setBio(request.bio().trim());
+        profile.setAvatarId(request.avatarId());
+        profile.setBirthDate(request.birthDate());
+
+        profile.setSetup(true);
+
+        UserProfile savedProfile = profileRepository.save(profile);
+        log.info("User profile setup completed for userId: {}", userId);
+
+        return userProfileMapper.toResponse(savedProfile, userId);
     }
 }

@@ -5,10 +5,10 @@ import java.time.Instant;
 public record UserProfileResponse(
         Long userId,
         String username,
-        String email,
+        String displayName,
         String bio,
         Integer avatarId,
-        String birthDate,
+        String formattedBirthDate,
         boolean isSetup,
-        Instant createdAt
+        Instant updatedAt
 ) {}

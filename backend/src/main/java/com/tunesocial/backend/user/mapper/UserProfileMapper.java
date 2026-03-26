@@ -1,5 +1,6 @@
 package com.tunesocial.backend.user.mapper;
 
+import com.tunesocial.backend.user.dto.MyProfileResponse;
 import com.tunesocial.backend.user.dto.UserProfileResponse;
 import com.tunesocial.backend.user.model.UserProfile;
 import com.tunesocial.backend.user.model.enums.BirthDateVisibility;
@@ -11,42 +12,46 @@ import java.time.LocalDate;
 @Component
 public class UserProfileMapper {
 
-
-    // TODO: when isSetup == 0
-    public UserProfileResponse toResponse(UserProfile profile, Long currentUserId) {
-        Long ownerId = profile.getId();
-        boolean isOwner = currentUserId != null && currentUserId.equals(ownerId);
-        boolean isAuthenticated = currentUserId != null;
-
-        ProfileVisibility visibility = profile.getProfileVisibility();
-
-        // private / not authenticated
-        if (!isOwner) {
-            if (visibility == ProfileVisibility.PRIVATE) {
-                return createRestrictedResponse(profile);
-            }
-
-            if (visibility == ProfileVisibility.REGISTERED_ONLY && !isAuthenticated) {
-                return createRestrictedResponse(profile);
-            }
-        }
-
-        // public / owner / registered
-        String formattedBirthDate = formatBirthDate(
+    public MyProfileResponse toMyResponse(UserProfile profile) {
+        return new MyProfileResponse(
+                profile.getId(),
+                profile.getUser().getUsername(),
+                profile.getUser().getEmail(),
+                profile.getDisplayName(),
+                profile.getBio(),
+                profile.getAvatarId(),
                 profile.getBirthDate(),
                 profile.getBirthDateVisibility(),
-                isOwner
+                profile.getProfileVisibility(),
+                profile.isSetup(),
+                profile.getUpdatedAt()
+        );
+    }
+
+    // TODO: when isSetup == 0
+    public UserProfileResponse toPublicResponse(UserProfile profile, Long currentUserId) {
+        boolean isAuthenticated = currentUserId != null;
+        ProfileVisibility visibility = profile.getProfileVisibility();
+
+        if (visibility == ProfileVisibility.PRIVATE ||
+                (visibility == ProfileVisibility.REGISTERED_ONLY && !isAuthenticated)) {
+            return createRestrictedResponse(profile);
+        }
+
+        String formattedBirthDate = formatPublicBirthDate(
+                profile.getBirthDate(),
+                profile.getBirthDateVisibility()
         );
 
         return new UserProfileResponse(
                 profile.getId(),
                 profile.getUser().getUsername(),
-                isOwner ? profile.getUser().getEmail() : null, // email for owner only
+                profile.getDisplayName(),
                 profile.getBio(),
                 profile.getAvatarId(),
                 formattedBirthDate,
                 profile.isSetup(),
-                profile.getCreatedAt()
+                profile.getUpdatedAt()
         );
     }
 
@@ -55,22 +60,18 @@ public class UserProfileMapper {
         return new UserProfileResponse(
                 profile.getId(),
                 profile.getUser().getUsername(),
+                profile.getDisplayName(),
                 null,
-                "This profile is private.",
                 profile.getAvatarId(),
                 null,
                 profile.isSetup(),
-                profile.getCreatedAt()
+                profile.getUpdatedAt()
         );
     }
 
-    private String formatBirthDate(LocalDate date, BirthDateVisibility visibility, boolean isOwner) {
-        if (date == null || (visibility == BirthDateVisibility.HIDDEN && !isOwner)) {
+    private String formatPublicBirthDate(LocalDate date, BirthDateVisibility visibility) {
+        if (date == null || visibility == BirthDateVisibility.HIDDEN) {
             return null;
-        }
-
-        if (isOwner) {
-            return date.toString();
         }
 
         return switch (visibility) {

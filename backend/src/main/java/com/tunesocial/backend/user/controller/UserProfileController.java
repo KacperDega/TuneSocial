@@ -1,5 +1,6 @@
 package com.tunesocial.backend.user.controller;
 
+import com.tunesocial.backend.user.dto.MyProfileResponse;
 import com.tunesocial.backend.user.dto.SetupProfileRequest;
 import com.tunesocial.backend.user.service.UserProfileService;
 import com.tunesocial.backend.user.dto.UpdateProfileRequest;
@@ -27,8 +28,15 @@ public class UserProfileController {
         return ResponseEntity.ok(profileService.getProfileByUsername(username, currentUserId));
     }
 
+    @GetMapping("/me")
+    public ResponseEntity<MyProfileResponse> getMyProfile(
+            @AuthenticationPrincipal User user) {
+
+        return ResponseEntity.ok(profileService.getMyProfile(user.getId()));
+    }
+
     @PutMapping("/me")
-    public ResponseEntity<UserProfileResponse> updateProfile(
+    public ResponseEntity<MyProfileResponse> updateProfile(
             @AuthenticationPrincipal User user,
             @Valid @RequestBody UpdateProfileRequest request) {
 
@@ -36,7 +44,7 @@ public class UserProfileController {
     }
 
     @PostMapping("/me/setup")
-    public ResponseEntity<UserProfileResponse> setupProfile(
+    public ResponseEntity<MyProfileResponse> setupProfile(
             @AuthenticationPrincipal User user,
             @Valid @RequestBody SetupProfileRequest request) {
 

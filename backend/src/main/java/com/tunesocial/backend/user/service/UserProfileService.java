@@ -1,5 +1,6 @@
 package com.tunesocial.backend.user.service;
 
+import com.tunesocial.backend.user.dto.MyProfileResponse;
 import com.tunesocial.backend.user.dto.SetupProfileRequest;
 import com.tunesocial.backend.user.dto.UpdateProfileRequest;
 import com.tunesocial.backend.user.dto.UserProfileResponse;
@@ -34,25 +35,36 @@ public class UserProfileService {
         UserProfile profile = profileRepository.findById(user.getId())
                 .orElseThrow(() -> new RuntimeException("Profile not found for user: " + username));
 
-        return userProfileMapper.toResponse(profile, currentUserId);
+        return userProfileMapper.toPublicResponse(profile, currentUserId);
+    }
+
+    @Transactional(readOnly = true)
+    public MyProfileResponse getMyProfile(Long userId) {
+        UserProfile profile = profileRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Profile not found"));
+
+        return userProfileMapper.toMyResponse(profile);
     }
 
     @Transactional
-    public UserProfileResponse updateProfile(Long userId, UpdateProfileRequest request) {
+    public MyProfileResponse updateProfile(Long userId, UpdateProfileRequest request) {
         UserProfile profile = profileRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Profile not found"));
 
         userMapper.updateProfileFromDto(request, profile);
-        profile.setDisplayName(profile.getDisplayName().trim());
+
+        if (profile.getDisplayName() != null) {
+            profile.setDisplayName(profile.getDisplayName().trim());
+        }
 
         UserProfile updatedProfile = profileRepository.save(profile);
         log.info("User profile updated successfully for userId: {}", userId);
 
-        return userProfileMapper.toResponse(updatedProfile, userId);
+        return userProfileMapper.toMyResponse(updatedProfile);
     }
 
     @Transactional
-    public UserProfileResponse setupProfile(Long userId, SetupProfileRequest request) {
+    public MyProfileResponse setupProfile(Long userId, SetupProfileRequest request) {
         UserProfile profile = profileRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Profile not found"));
 
@@ -70,6 +82,6 @@ public class UserProfileService {
         UserProfile savedProfile = profileRepository.save(profile);
         log.info("User profile setup completed for userId: {}", userId);
 
-        return userProfileMapper.toResponse(savedProfile, userId);
+        return userProfileMapper.toMyResponse(savedProfile);
     }
 }

@@ -4,6 +4,9 @@ import com.tunesocial.backend.user.dto.MyProfileResponse;
 import com.tunesocial.backend.user.dto.SetupProfileRequest;
 import com.tunesocial.backend.user.dto.UpdateProfileRequest;
 import com.tunesocial.backend.user.dto.UserProfileResponse;
+import com.tunesocial.backend.user.exception.ProfileAlreadySetupException;
+import com.tunesocial.backend.user.exception.UserNotFoundException;
+import com.tunesocial.backend.user.exception.UserProfileNotFoundException;
 import com.tunesocial.backend.user.mapper.UserMapper;
 import com.tunesocial.backend.user.mapper.UserProfileMapper;
 import com.tunesocial.backend.user.model.User;
@@ -25,15 +28,13 @@ public class UserProfileService {
     private final UserMapper userMapper;
     private final UserProfileMapper userProfileMapper;
 
-    // TODO: EXCEPTIONS
-
     @Transactional(readOnly = true)
     public UserProfileResponse getProfileByUsername(String username, Long currentUserId) {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found: " + username));
+                .orElseThrow(() -> new UserNotFoundException(username));
 
         UserProfile profile = profileRepository.findById(user.getId())
-                .orElseThrow(() -> new RuntimeException("Profile not found for user: " + username));
+                .orElseThrow(() -> new UserProfileNotFoundException(user.getId()));
 
         return userProfileMapper.toPublicResponse(profile, currentUserId);
     }
@@ -41,7 +42,7 @@ public class UserProfileService {
     @Transactional(readOnly = true)
     public MyProfileResponse getMyProfile(Long userId) {
         UserProfile profile = profileRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Profile not found"));
+                .orElseThrow(() -> new UserNotFoundException(userId));
 
         return userProfileMapper.toMyResponse(profile);
     }
@@ -49,7 +50,7 @@ public class UserProfileService {
     @Transactional
     public MyProfileResponse updateProfile(Long userId, UpdateProfileRequest request) {
         UserProfile profile = profileRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Profile not found"));
+                .orElseThrow(() -> new UserProfileNotFoundException(userId));
 
         userMapper.updateProfileFromDto(request, profile);
 
@@ -66,10 +67,10 @@ public class UserProfileService {
     @Transactional
     public MyProfileResponse setupProfile(Long userId, SetupProfileRequest request) {
         UserProfile profile = profileRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Profile not found"));
+                .orElseThrow(() -> new UserProfileNotFoundException(userId));
 
         if (profile.isSetup()) {
-            throw new IllegalStateException("Profile has already been set up. Use update instead.");
+            throw new ProfileAlreadySetupException(userId);
         }
 
         profile.setDisplayName(request.displayName().trim());

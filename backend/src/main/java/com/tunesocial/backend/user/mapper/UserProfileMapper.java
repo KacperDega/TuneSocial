@@ -28,10 +28,13 @@ public class UserProfileMapper {
         );
     }
 
-    // TODO: when isSetup == 0
     public UserProfileResponse toPublicResponse(UserProfile profile, Long currentUserId) {
         boolean isAuthenticated = currentUserId != null;
         ProfileVisibility visibility = profile.getProfileVisibility();
+
+        if (!profile.isSetup()) {
+            return createNotSetupResponse(profile);
+        }
 
         if (visibility == ProfileVisibility.PRIVATE ||
                 (visibility == ProfileVisibility.REGISTERED_ONLY && !isAuthenticated)) {
@@ -65,6 +68,19 @@ public class UserProfileMapper {
                 profile.getAvatarId(),
                 null,
                 profile.isSetup(),
+                profile.getUpdatedAt()
+        );
+    }
+
+    private UserProfileResponse createNotSetupResponse(UserProfile profile) {
+        return new UserProfileResponse(
+                profile.getId(),
+                profile.getUser().getUsername(),
+                profile.getDisplayName(),
+                null,
+                profile.getAvatarId(),
+                null,
+                false,
                 profile.getUpdatedAt()
         );
     }

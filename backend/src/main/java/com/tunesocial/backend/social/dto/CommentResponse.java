@@ -1,12 +1,13 @@
 package com.tunesocial.backend.social.dto;
 
+import com.tunesocial.backend.user.dto.UserRefDto;
+
 import java.time.Instant;
 import java.util.List;
 
 public record CommentResponse(
         Long id,
-        Long userId,
-        String username,
+        UserRefDto author,
         String content,
         Long parentId,
         ReactionsSummary reactions,

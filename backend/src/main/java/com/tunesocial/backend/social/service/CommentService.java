@@ -8,6 +8,7 @@ import com.tunesocial.backend.social.exception.SocialResourceNotFoundException;
 import com.tunesocial.backend.social.model.PostComment;
 import com.tunesocial.backend.social.model.enums.ReactionTargetType;
 import com.tunesocial.backend.social.repository.PostCommentRepository;
+import com.tunesocial.backend.user.dto.UserRefDto;
 import com.tunesocial.backend.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -34,16 +35,20 @@ public class CommentService {
         List<PostComment> comments = commentsPage.getContent();
 
         Set<Long> userIds = comments.stream().map(PostComment::getUserId).collect(Collectors.toSet());
-        Map<Long, String> usernames = userService.getUsernamesByIds(userIds);
+        Map<Long, UserRefDto> userRefs = userService.getUserReferencesByIds(userIds);
 
         List<CommentResponse> responses = comments.stream().map(c -> {
             ReactionsSummary reactions = socialService.getReactionSummary(c.getId(), ReactionTargetType.COMMENT, currentUserId);
             long repliesCount = commentRepository.countByParentId(c.getId());
 
+            UserRefDto author = userRefs.getOrDefault(
+                    c.getUserId(),
+                    new UserRefDto(c.getUserId(), null, "User_" + c.getUserId(), 1)
+            );
+
             return new CommentResponse(
                     c.getId(),
-                    c.getUserId(),
-                    usernames.get(c.getUserId()),
+                    author,
                     c.getContent(),
                     c.getParentId(),
                     reactions,
@@ -61,14 +66,19 @@ public class CommentService {
         List<PostComment> replies = commentRepository.findAllByParentIdOrderByCreatedAtAsc(commentId);
 
         Set<Long> userIds = replies.stream().map(PostComment::getUserId).collect(Collectors.toSet());
-        Map<Long, String> usernames = userService.getUsernamesByIds(userIds);
+        Map<Long, UserRefDto> userRefs = userService.getUserReferencesByIds(userIds);
 
         return replies.stream().map(r -> {
             ReactionsSummary reactions = socialService.getReactionSummary(r.getId(), ReactionTargetType.COMMENT, currentUserId);
+
+            UserRefDto author = userRefs.getOrDefault(
+                    r.getUserId(),
+                    new UserRefDto(r.getUserId(), null, "User_" + r.getUserId(), 1)
+            );
+
             return new CommentResponse(
                     r.getId(),
-                    r.getUserId(),
-                    usernames.getOrDefault(r.getUserId(), "User_" + r.getUserId()),
+                    author,
                     r.getContent(),
                     r.getParentId(),
                     reactions,
@@ -79,7 +89,6 @@ public class CommentService {
         }).toList();
     }
 
-    // Dodawanie komentarza lub odpowiedzi
     @Transactional
     public CommentResponse addComment(Long userId, CreateCommentRequest request) {
         PostComment comment = new PostComment();
@@ -90,12 +99,16 @@ public class CommentService {
 
         PostComment saved = commentRepository.save(comment);
 
-        String username = userService.getUsernamesByIds(Set.of(userId)).get(userId);
+        Map<Long, UserRefDto> userRefs = userService.getUserReferencesByIds(Set.of(userId));
+
+        UserRefDto author = userRefs.getOrDefault(
+                userId,
+                new UserRefDto(userId, "user_" + userId, "Użytkownik " + userId, 1)
+        );
 
         return new CommentResponse(
                 saved.getId(),
-                userId,
-                username != null ? username : "User_" + userId,
+                author,
                 saved.getContent(),
                 saved.getParentId(),
                 new ReactionsSummary(0, Map.of(), null),

@@ -1,6 +1,7 @@
 package com.tunesocial.backend.user.service;
 
 import com.tunesocial.backend.user.dto.CreateUserRequest;
+import com.tunesocial.backend.user.dto.UserRefDto;
 import com.tunesocial.backend.user.model.User;
 import com.tunesocial.backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -51,12 +52,11 @@ public class UserService {
     }
 
 
-    // TODO: userRefDto to return username + avatarId
-    public Map<Long, String> getUsernamesByIds(Set<Long> userIds) {
+    public Map<Long, UserRefDto> getUserReferencesByIds(Set<Long> userIds) {
         if (userIds.isEmpty()) return Map.of();
 
-        return userRepository.findAllById(userIds).stream()
-                .collect(Collectors.toMap(User::getId, User::getUsername));
+        return userRepository.findUserRefsByIds(userIds).stream()
+                .collect(Collectors.toMap(UserRefDto::userId, userRef -> userRef));
     }
 
     public List<User> getAll() {

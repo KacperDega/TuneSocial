@@ -4,6 +4,7 @@ import com.tunesocial.backend.music.dto.ArtistRefDto;
 import com.tunesocial.backend.music.model.RateableEntity;
 import com.tunesocial.backend.rating.model.Rating;
 import com.tunesocial.backend.rating.model.RatingTargetType;
+import com.tunesocial.backend.user.dto.UserRefDto;
 
 import java.time.Instant;
 import java.util.stream.Collectors;
@@ -15,8 +16,7 @@ public record RatingDetailsResponse(
         int value,
         String comment,
 
-        Long userId,
-        String username,
+        UserRefDto author,
 
         String title,
         String imageUrl,
@@ -25,12 +25,17 @@ public record RatingDetailsResponse(
         Instant createdAt,
         Instant updatedAt
 ) {
-    public static RatingDetailsResponse fromEntities(Rating rating, RateableEntity rateableEntity, String username) {
+    public static RatingDetailsResponse fromEntities(Rating rating, RateableEntity rateableEntity, UserRefDto author) {
         String title = rateableEntity.getTitle() == null ? "Unknown" : rateableEntity.getTitle();
         String artists = rateableEntity.getArtists().stream().map(ArtistRefDto::name).collect(Collectors.joining(", "));
         artists = artists.isEmpty() ? "Unknown" : artists;
 
-        String finalUsername = (username == null || username.isEmpty()) ? "User_" + rating.getUserId() : username;
+        UserRefDto finalAuthor = author != null ? author : new UserRefDto(
+                rating.getUserId(),
+                null,
+                "User_" + rating.getUserId(),
+                1
+        );
 
         return new RatingDetailsResponse(
                 rating.getId(),
@@ -39,8 +44,7 @@ public record RatingDetailsResponse(
                 rating.getRatingValue(),
                 rating.getComment(),
 
-                rating.getUserId(),
-                finalUsername,
+                finalAuthor,
 
                 title,
                 rateableEntity.getImageUrl(),

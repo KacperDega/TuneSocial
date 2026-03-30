@@ -14,6 +14,7 @@ import com.tunesocial.backend.rating.model.RatingSummary;
 import com.tunesocial.backend.rating.model.RatingTargetType;
 import com.tunesocial.backend.rating.repository.RatingRepository;
 import com.tunesocial.backend.rating.repository.RatingSummaryRepository;
+import com.tunesocial.backend.user.dto.UserRefDto;
 import com.tunesocial.backend.user.service.UserService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -342,15 +343,18 @@ class RatingServiceTest {
 
             when(metadataService.getOrFetchTracks(List.of(TRACK_ID))).thenReturn(Map.of(TRACK_ID, trackEntity));
             when(metadataService.getOrFetchAlbums(List.of(ALBUM_ID))).thenReturn(Map.of(ALBUM_ID, albumEntity));
-            when(userService.getUsernamesByIds(anySet())).thenReturn(Map.of(USER_ID, "TestUser"));
+
+            UserRefDto mockUserRef = new UserRefDto(USER_ID, "TestUser", "Test Display Name", 1);
+            when(userService.getUserReferencesByIds(anySet())).thenReturn(Map.of(USER_ID, mockUserRef));
 
             // When
             PagedResponse<RatingDetailsResponse> result = ratingService.getUserComments(USER_ID, null, PAGEABLE);
 
             // Then
             assertThat(result.content()).hasSize(2);
-            assertThat(result.content().get(0).username()).isEqualTo("TestUser");
-            verify(userService).getUsernamesByIds(anySet());
+            assertThat(result.content().get(0).author().username()).isEqualTo("TestUser");
+            assertThat(result.content().get(0).author().displayName()).isEqualTo("Test Display Name");
+            verify(userService).getUserReferencesByIds(anySet());
             verify(metadataService).getOrFetchTracks(anyList());
             verify(metadataService).getOrFetchAlbums(anyList());
         }
@@ -398,15 +402,17 @@ class RatingServiceTest {
         @DisplayName("Should fallback to 'User_ID' when username is missing in UserService")
         void shouldFallbackToUserId_WhenUsernameNotFound() {
             // Given
+            Long missingUserId = 999L;
+
             Rating rating = new Rating();
-            rating.setUserId(999L);
+            rating.setUserId(missingUserId);
             rating.setTargetId(TRACK_ID);
             rating.setTargetType(RatingTargetType.TRACK);
 
             when(ratingRepository.findAllByUserIdAndCommentIsNotNullAndCommentIsNotEmpty(anyLong(), any()))
                     .thenReturn(new PageImpl<>(List.of(rating)));
 
-            when(userService.getUsernamesByIds(anySet())).thenReturn(Map.of());
+            when(userService.getUserReferencesByIds(anySet())).thenReturn(Map.of());
 
             TrackEntity track = new TrackEntity();
             track.setArtists(List.of());
@@ -416,7 +422,12 @@ class RatingServiceTest {
             PagedResponse<RatingDetailsResponse> result = ratingService.getUserComments(USER_ID, null, PAGEABLE);
 
             // Then
-            assertThat(result.content().get(0).username()).isEqualTo("User_999");
+            UserRefDto fallbackAuthor = result.content().get(0).author();
+
+            assertThat(fallbackAuthor.userId()).isEqualTo(missingUserId);
+            assertThat(fallbackAuthor.username()).isNull();
+            assertThat(fallbackAuthor.displayName()).isEqualTo("User_" + missingUserId);
+            assertThat(fallbackAuthor.avatarId()).isEqualTo(1);
         }
     }
 }

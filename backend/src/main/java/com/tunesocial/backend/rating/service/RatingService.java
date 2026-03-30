@@ -15,6 +15,7 @@ import com.tunesocial.backend.rating.model.RatingSummary;
 import com.tunesocial.backend.rating.model.RatingTargetType;
 import com.tunesocial.backend.rating.repository.RatingRepository;
 import com.tunesocial.backend.rating.repository.RatingSummaryRepository;
+import com.tunesocial.backend.user.dto.UserRefDto;
 import com.tunesocial.backend.user.service.UserService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -216,17 +217,17 @@ public class RatingService {
 
         Map<String, TrackEntity> tracks = trackIds.isEmpty() ? Map.of() : metadataService.getOrFetchTracks(new ArrayList<>(trackIds));
         Map<String, AlbumEntity> albums = albumIds.isEmpty() ? Map.of() : metadataService.getOrFetchAlbums(new ArrayList<>(albumIds));
-        Map<Long, String> usernames = userService.getUsernamesByIds(userIds);
+        Map<Long, UserRefDto> userRefs = userService.getUserReferencesByIds(userIds);
 
 
         List<RatingDetailsResponse> details = ratings.stream()
-                .map(r -> mapToDetails(r, tracks, albums, usernames))
+                .map(r -> mapToDetails(r, tracks, albums, userRefs))
                 .toList();
 
         return new PagedResponse<>(details, ratingsPage.hasNext() ? ratingsPage.getNumber() + 1 : null);
     }
 
-    private RatingDetailsResponse mapToDetails(Rating r, Map<String, TrackEntity> tracks, Map<String, AlbumEntity> albums, Map<Long, String> usernames) {
+    private RatingDetailsResponse mapToDetails(Rating r, Map<String, TrackEntity> tracks, Map<String, AlbumEntity> albums, Map<Long, UserRefDto> userRefs) {
         RateableEntity entity = null;
 
         if (r.getTargetType() == RatingTargetType.TRACK) {
@@ -235,17 +236,25 @@ public class RatingService {
             entity = albums.get(r.getTargetId());
         }
 
-        String username = usernames.get(r.getUserId());
+        UserRefDto author = userRefs.get(r.getUserId());
 
         if (entity == null) {
+            if (author == null) {
+                author = new UserRefDto(
+                        r.getUserId(),
+                        null,
+                        "User_" + r.getUserId(),
+                        1
+                );
+            }
+
             return new RatingDetailsResponse(
                     r.getId(),
                     r.getTargetId(),
                     r.getTargetType(),
                     r.getRatingValue(),
                     r.getComment(),
-                    r.getUserId(),
-                    "User_" + r.getUserId(),
+                    author,
                     "Unknown",
                     null,
                     "Unknown",
@@ -254,6 +263,6 @@ public class RatingService {
             );
         }
 
-        return RatingDetailsResponse.fromEntities(r, entity, username);
+        return RatingDetailsResponse.fromEntities(r, entity, author);
     }
 }

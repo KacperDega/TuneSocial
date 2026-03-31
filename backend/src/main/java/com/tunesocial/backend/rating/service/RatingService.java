@@ -164,9 +164,9 @@ public class RatingService {
     }
 
     @Transactional(readOnly = true)
-    public List<RatingSummary> getTopSummaries(RatingTargetType type, long m, double C, int resultLimit) {
+    public Page<RatingSummary> getTopSummaries(RatingTargetType type, long m, double C, Pageable pageable) {
         return summaryRepository.findTopSummaries(
-                type, m, C, m, PageRequest.of(0, resultLimit));
+                type, m, C, m, pageable);
     }
 
     @Transactional(readOnly = true)

@@ -3,6 +3,7 @@ package com.tunesocial.backend.rating.repository;
 import com.tunesocial.backend.music.dto.TrackDetailsResponse;
 import com.tunesocial.backend.rating.model.RatingSummary;
 import com.tunesocial.backend.rating.model.RatingTargetType;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -30,7 +31,7 @@ public interface RatingSummaryRepository extends JpaRepository<RatingSummary, Lo
         WHERE s.targetType = :type AND s.ratingCount >= :minVotes
         ORDER BY ((s.ratingSum + :m * :C) / (s.ratingCount + :m)) DESC
     """)
-    List<RatingSummary> findTopSummaries(
+    Page<RatingSummary> findTopSummaries(
             @Param("type") RatingTargetType type,
             @Param("m") long m,
             @Param("C") double C,

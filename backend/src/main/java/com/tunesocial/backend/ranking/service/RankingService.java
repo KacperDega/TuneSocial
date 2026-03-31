@@ -1,5 +1,6 @@
 package com.tunesocial.backend.ranking.service;
 
+import com.tunesocial.backend.common.dto.PagedResponse;
 import com.tunesocial.backend.music.model.AlbumEntity;
 import com.tunesocial.backend.music.model.TrackEntity;
 import com.tunesocial.backend.music.service.MusicMetadataService;
@@ -11,6 +12,8 @@ import com.tunesocial.backend.rating.model.RatingTargetType;
 import com.tunesocial.backend.rating.service.RatingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -27,34 +30,46 @@ public class RankingService {
     @Value("${app.ranking.min-votes:5}")
     private long m;
 
-    public List<TrackRankingResponse> getTopTracks(int limit) {
+    public PagedResponse<TrackRankingResponse> getTopTracks(Pageable pageable) {
         // TODO: caching to avoid constantly calculating avg
         Double globalAvg = ratingService.getGlobalAverageForType(RatingTargetType.TRACK);
         double C = (globalAvg != null) ? globalAvg : 5.0;
 
-        List<RatingSummary> topSummaries = ratingService.getTopSummaries(
-                RatingTargetType.TRACK, m, C, limit);
+        Page<RatingSummary> summariesPage = ratingService.getTopSummaries(
+                RatingTargetType.TRACK, m, C, pageable);
+
+        List<RatingSummary> topSummaries = summariesPage.getContent();
 
         List<String> ids = topSummaries.stream().map(RatingSummary::getTargetId).toList();
         Map<String, TrackEntity> metadataMap = metadataService.getOrFetchTracks(ids);
 
-        return topSummaries.stream()
+        List<TrackRankingResponse> responses = topSummaries.stream()
                 .map(s -> rankingMapper.toTrackRankingResponse(metadataMap.get(s.getTargetId()), s))
                 .toList();
+
+        Integer nextPage = summariesPage.hasNext() ? summariesPage.getNumber() + 1 : null;
+
+        return new PagedResponse<>(responses, nextPage);
     }
 
-    public List<AlbumRankingResponse> getTopAlbums(int limit) {
+    public PagedResponse<AlbumRankingResponse> getTopAlbums(Pageable pageable) {
         Double globalAvg = ratingService.getGlobalAverageForType(RatingTargetType.ALBUM);
         double C = (globalAvg != null) ? globalAvg : 5.0;
 
-        List<RatingSummary> topSummaries = ratingService.getTopSummaries(
-                RatingTargetType.ALBUM, m, C, limit);
+        Page<RatingSummary> summariesPage = ratingService.getTopSummaries(
+                RatingTargetType.ALBUM, m, C, pageable);
+
+        List<RatingSummary> topSummaries = summariesPage.getContent();
 
         List<String> ids = topSummaries.stream().map(RatingSummary::getTargetId).toList();
         Map<String, AlbumEntity> metadataMap = metadataService.getOrFetchAlbums(ids);
 
-        return topSummaries.stream()
+        List<AlbumRankingResponse> responses = topSummaries.stream()
                 .map(s -> rankingMapper.toAlbumRankingResponse(metadataMap.get(s.getTargetId()), s))
                 .toList();
+
+        Integer nextPage = summariesPage.hasNext() ? summariesPage.getNumber() + 1 : null;
+
+        return new PagedResponse<>(responses, nextPage);
     }
 }

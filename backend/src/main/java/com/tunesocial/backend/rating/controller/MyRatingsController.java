@@ -7,6 +7,7 @@ import com.tunesocial.backend.rating.exception.RatingNotFoundException;
 import com.tunesocial.backend.rating.model.Rating;
 import com.tunesocial.backend.rating.model.RatingTargetType;
 import com.tunesocial.backend.rating.service.RatingService;
+import com.tunesocial.backend.user.model.User;
 import com.tunesocial.backend.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -14,6 +15,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -30,8 +32,8 @@ public class MyRatingsController {
     @GetMapping("/{targetType}/{targetId}")
     public RatingResponse getMyRatingForTarget(@PathVariable String targetId,
                                                @PathVariable RatingTargetType targetType,
-                                               Authentication authentication) {
-        Long currentUserId = userService.getCurrentUserIdOrThrow(authentication);
+                                               @AuthenticationPrincipal User user) {
+        Long currentUserId = user.getId();
 
         return ratingService.findUserRatingForTarget(currentUserId, targetId, targetType)
                 .map(RatingResponse::fromEntity)
@@ -40,26 +42,25 @@ public class MyRatingsController {
                 );
     }
 
-    // TODO: PAGING
-    @GetMapping()
-    public List<RatingResponse> getMyRatings(Authentication authentication) {
+    @GetMapping
+    public ResponseEntity<PagedResponse<RatingDetailsResponse>> getMyRatings(
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
+            @AuthenticationPrincipal User user) {
 
-        Long currentUserId = userService.getCurrentUserIdOrThrow(authentication);
+        Long currentUserId = user.getId();
 
-        List<Rating> ratings = ratingService.getRatingsForUser(currentUserId);
+        PagedResponse<RatingDetailsResponse> response = ratingService.getRatingsForUser(currentUserId, pageable);
 
-        return ratings.stream()
-                .map(RatingResponse::fromEntity)
-                .collect(Collectors.toList());
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/reviews")
     public ResponseEntity<PagedResponse<RatingDetailsResponse>> getMyReviews(
-            Authentication authentication,
+            @AuthenticationPrincipal User user,
             @RequestParam(required = false) RatingTargetType type,
             @PageableDefault(size = 10, sort = "updatedAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
-        Long currentUserId = userService.getCurrentUserIdOrThrow(authentication);
+        Long currentUserId = user.getId();
 
         return ResponseEntity.ok(ratingService.getUserComments(currentUserId, type, pageable));
     }

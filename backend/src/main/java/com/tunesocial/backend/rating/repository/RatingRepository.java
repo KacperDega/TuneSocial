@@ -17,7 +17,7 @@ public interface RatingRepository extends JpaRepository<Rating, Long> {
             RatingTargetType targetType
     );
 
-    List<Rating> findAllByUserId(Long userId);
+    Page<Rating> findAllByUserIdOrderByCreatedAtDesc(Long userId, Pageable pageable);
 
     Page<Rating> findAllByTargetIdAndTargetTypeAndCommentIsNotNull(
             String targetId,

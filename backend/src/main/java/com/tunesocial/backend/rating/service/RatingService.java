@@ -100,8 +100,10 @@ public class RatingService {
     }
 
     @Transactional(readOnly = true)
-    public List<Rating> getRatingsForUser(Long userId) {
-        return ratingRepository.findAllByUserId((userId));
+    public PagedResponse<RatingDetailsResponse> getRatingsForUser(Long userId, Pageable pageable) {
+        Page<Rating> ratingsPage = ratingRepository.findAllByUserIdOrderByCreatedAtDesc(userId, pageable);
+
+        return convertToPagedResponse(ratingsPage);
     }
 
     private RatingSummary createSummary(String targetId, RatingTargetType type) {

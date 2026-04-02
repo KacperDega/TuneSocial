@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -56,6 +57,13 @@ public class SocialService {
             newReaction.setTargetType(targetType);
             newReaction.setType(reactionType);
             reactionRepository.save(newReaction);
+        }
+    }
+
+    @Transactional
+    public void removeReactionsForTargets(ReactionTargetType targetType, Collection<Long> targetIds) {
+        if (targetIds != null && !targetIds.isEmpty()) {
+            reactionRepository.deleteAllByTargetTypeAndTargetIdIn(targetType, targetIds);
         }
     }
 

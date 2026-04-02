@@ -18,6 +18,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -144,10 +145,18 @@ public class CommentService {
             throw new AccessDeniedException("You can only delete your own comments");
         }
 
-        // if parent comment
+        List<Long> commentIdsToDelete = new ArrayList<>();
+        commentIdsToDelete.add(commentId);
+
+        // if parent
         if (comment.getParentId() == null) {
+            List<Long> replyIds = commentRepository.findAllIdsByParentId(commentId);
+            commentIdsToDelete.addAll(replyIds);
+
             commentRepository.deleteAllByParentId(commentId);
         }
+
+        socialService.removeReactionsForTargets(ReactionTargetType.COMMENT, commentIdsToDelete);
 
         commentRepository.delete(comment);
     }

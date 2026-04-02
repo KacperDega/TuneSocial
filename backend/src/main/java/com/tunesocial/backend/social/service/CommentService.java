@@ -4,6 +4,7 @@ import com.tunesocial.backend.common.dto.PagedResponse;
 import com.tunesocial.backend.social.dto.CommentResponse;
 import com.tunesocial.backend.social.dto.CreateCommentRequest;
 import com.tunesocial.backend.social.dto.ReactionsSummary;
+import com.tunesocial.backend.social.exception.InvalidParentCommentException;
 import com.tunesocial.backend.social.exception.SocialResourceNotFoundException;
 import com.tunesocial.backend.social.model.PostComment;
 import com.tunesocial.backend.social.model.enums.ReactionTargetType;
@@ -91,11 +92,27 @@ public class CommentService {
 
     @Transactional
     public CommentResponse addComment(Long userId, CreateCommentRequest request) {
+        Long targetParentId = request.parentId();
+
+        // reply
+        if (targetParentId != null) {
+            PostComment parentComment = commentRepository.findById(targetParentId)
+                    .orElseThrow(() -> new SocialResourceNotFoundException("Parent comment not found"));
+
+            if (!parentComment.getPostId().equals(request.postId())) {
+                throw new InvalidParentCommentException("Parent comment does not belong to the specified post");
+            }
+
+            if (parentComment.getParentId() != null) {
+                targetParentId = parentComment.getParentId();
+            }
+        }
+
         PostComment comment = new PostComment();
         comment.setPostId(request.postId());
         comment.setUserId(userId);
         comment.setContent(request.content());
-        comment.setParentId(request.parentId());
+        comment.setParentId(targetParentId);
 
         PostComment saved = commentRepository.save(comment);
 
@@ -103,7 +120,7 @@ public class CommentService {
 
         UserRefDto author = userRefs.getOrDefault(
                 userId,
-                new UserRefDto(userId, "user_" + userId, "Użytkownik " + userId, 1)
+                new UserRefDto(userId, null, "User_" + userId, 1)
         );
 
         return new CommentResponse(

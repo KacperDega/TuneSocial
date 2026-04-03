@@ -10,6 +10,7 @@ import java.time.Instant;
 @Table(name = "post_comments")
 @Getter @Setter
 public class PostComment {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -28,11 +29,17 @@ public class PostComment {
     @Column(nullable = false)
     private Instant createdAt;
 
+    @Column(nullable = false)
     private Instant updatedAt;
 
     @PrePersist
     protected void onCreate() {
         this.createdAt = Instant.now();
+        this.updatedAt = Instant.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
         this.updatedAt = Instant.now();
     }
 }

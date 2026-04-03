@@ -28,8 +28,10 @@ public class UserProfile {
     @Column(length = 500)
     private String bio;
 
+    @Column(nullable = false)
     private Integer avatarId = 1;
 
+    @Column(nullable = false)
     private LocalDate birthDate;
 
     @Enumerated(EnumType.STRING)
@@ -43,7 +45,10 @@ public class UserProfile {
     @Column(nullable = false)
     private boolean isSetup = false;
 
+    @Column(nullable = false)
     private Instant updatedAt;
+
+    @Column(nullable = false)
     private Instant createdAt;
 
     @PreUpdate

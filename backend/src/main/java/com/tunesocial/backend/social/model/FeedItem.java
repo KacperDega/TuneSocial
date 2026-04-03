@@ -13,17 +13,22 @@ import java.time.Instant;
 })
 @Getter @Setter
 public class FeedItem {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private FeedItemType type;
 
+    @Column(nullable = false)
     private String referenceId;
 
+    @Column(nullable = false)
     private Long userId;
 
+    @Column(nullable = false)
     private Instant createdAt;
 
     @PrePersist

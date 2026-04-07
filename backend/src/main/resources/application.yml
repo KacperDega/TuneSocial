@@ -13,6 +13,9 @@ app:
     discography-ttl-days: 7
     discography-expired-days: 14
 
+  notification:
+    max-notifications-per-user: 100
+
 
 resilience4j:
   circuitbreaker:

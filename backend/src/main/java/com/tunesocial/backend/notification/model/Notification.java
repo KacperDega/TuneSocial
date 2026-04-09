@@ -34,6 +34,9 @@ public class Notification {
     @Column(nullable = false)
     private String targetId;
 
+    @OneToOne(mappedBy = "notification", cascade = CascadeType.ALL, fetch = FetchType.LAZY, optional = false)
+    private NotificationContextData context;
+
     @Column(nullable = false)
     private boolean isRead = false;
 

@@ -24,7 +24,9 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
             NotificationType type
     );
 
-    Page<Notification> findAllByUserIdOrderByCreatedAtDesc(Long userId, Pageable pageable);
+    @Query(value = "SELECT n FROM Notification n LEFT JOIN FETCH n.context WHERE n.userId = :userId ORDER BY n.createdAt DESC",
+            countQuery = "SELECT count(n) FROM Notification n WHERE n.userId = :userId")
+    Page<Notification> findAllByUserIdWithContextOrderByCreatedAtDesc(@Param("userId") Long userId, Pageable pageable);
 
     long countByUserIdAndIsReadFalse(Long userId);
 

@@ -4,6 +4,7 @@ import com.tunesocial.backend.common.dto.PagedResponse;
 import com.tunesocial.backend.notification.dto.NotificationContext;
 import com.tunesocial.backend.notification.dto.NotificationResponse;
 import com.tunesocial.backend.notification.model.Notification;
+import com.tunesocial.backend.notification.model.NotificationContextData;
 import com.tunesocial.backend.notification.model.enums.NotificationTargetType;
 import com.tunesocial.backend.notification.model.enums.NotificationType;
 import com.tunesocial.backend.notification.repository.NotificationRepository;
@@ -39,7 +40,12 @@ public class NotificationService {
             Long actorId,
             NotificationType type,
             NotificationTargetType targetType,
-            String targetId
+            // context fields
+            String targetId,
+            String title,
+            String imageUrl,
+            String textSnippet,
+            String actionUrl
     ) {
         if (recipientUserId.equals(actorId)) {
             return;
@@ -54,11 +60,18 @@ public class NotificationService {
                 notification.setActorId(actorId);
                 notification.setRead(false);
                 notification.setCreatedAt(Instant.now());
+
+                if (notification.getContext() != null) {
+                    notification.getContext().setTextSnippet(textSnippet);
+                    notification.getContext().setImageUrl(imageUrl);
+                }
+
                 notificationRepository.save(notification);
                 return;
             }
         }
 
+        // new notification
         Notification notification = new Notification();
         notification.setUserId(recipientUserId);
         notification.setActorId(actorId);
@@ -66,10 +79,18 @@ public class NotificationService {
         notification.setTargetType(targetType);
         notification.setTargetId(targetId);
         notification.setRead(false);
-        notification.setCreatedAt(Instant.now());
+
+        // new context
+        NotificationContextData contextData = new NotificationContextData();
+        contextData.setNotification(notification);
+        contextData.setTitle(title);
+        contextData.setImageUrl(imageUrl);
+        contextData.setTextSnippet(textSnippet);
+        contextData.setActionUrl(actionUrl);
+
+        notification.setContext(contextData);
 
         notificationRepository.save(notification);
-
 
         // TODO: CLEANING OLD NOTIFICATIONS
     }
@@ -84,7 +105,7 @@ public class NotificationService {
 
     @Transactional(readOnly = true)
     public PagedResponse<NotificationResponse> getUserNotifications(Long userId, Pageable pageable) {
-        Page<Notification> page = notificationRepository.findAllByUserIdOrderByCreatedAtDesc(userId, pageable);
+        Page<Notification> page = notificationRepository.findAllByUserIdWithContextOrderByCreatedAtDesc(userId, pageable);
         List<Notification> notifications = page.getContent();
 
         Set<Long> actorIds = notifications.stream()
@@ -95,20 +116,38 @@ public class NotificationService {
         Map<Long, UserRefDto> userRefs = userService.getUserReferencesByIds(actorIds);
 
         List<NotificationResponse> responses = notifications.stream().map(n -> {
-            NotificationContext context = buildContext(n, userRefs);
+            UserRefDto actor = userRefs.getOrDefault(n.getActorId(),
+                    new UserRefDto(n.getActorId(), null, "User_" + n.getActorId(), 1));
+
+            NotificationContext contextDto = getNotificationContext(n, actor);
 
             return new NotificationResponse(
                     n.getId(),
                     n.getType(),
                     n.getTargetType(),
                     n.getTargetId(),
-                    context,
+                    contextDto,
                     n.isRead(),
                     n.getCreatedAt()
             );
         }).toList();
 
         return new PagedResponse<>(responses, page.hasNext() ? page.getNumber() + 1 : null);
+    }
+
+    private static NotificationContext getNotificationContext(Notification n, UserRefDto actor) {
+        NotificationContextData context = n.getContext();
+
+        return new NotificationContext(
+                actor.userId(),
+                actor.username(),
+                actor.displayName(),
+                actor.avatarId(),
+                context != null ? context.getTitle() : null,
+                context != null ? context.getImageUrl() : null,
+                context != null ? context.getTextSnippet() : null,
+                context != null ? context.getActionUrl() : null
+        );
     }
 
     @Transactional(readOnly = true)
@@ -131,34 +170,6 @@ public class NotificationService {
         }
 
         notification.setRead(true);
-    }
-
-    private NotificationContext buildContext(Notification n, Map<Long, UserRefDto> userRefs) {
-        if (n.getType() == NotificationType.SYSTEM_ANNOUNCEMENT || n.getType() == NotificationType.OTHER) {
-            return NotificationContext.forSystem(
-                    "System Announcement",
-                    null,
-                    null,
-                    null
-            );
-        }
-
-        UserRefDto actor = userRefs.getOrDefault(n.getActorId(),
-                new UserRefDto(n.getActorId(), null, "User_"+n.getActorId(), null));
-
-        if (isUserToUserNotification(n.getType())) {
-            return NotificationContext.forUser(
-                    actor,
-                    null
-            );
-        }
-
-        return NotificationContext.forSocial(
-                actor,
-                null,
-                null,
-                null
-        );
     }
 
     private boolean isUserToUserNotification(NotificationType type) {

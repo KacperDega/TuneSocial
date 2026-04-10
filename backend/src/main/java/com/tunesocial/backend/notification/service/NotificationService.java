@@ -13,6 +13,7 @@ import com.tunesocial.backend.notification.repository.NotificationRepository;
 import com.tunesocial.backend.user.dto.UserRefDto;
 import com.tunesocial.backend.user.service.UserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,6 +29,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class NotificationService {
 
     @Value("${app.cache.ttl-days:100}")
@@ -94,7 +96,7 @@ public class NotificationService {
 
         notificationRepository.save(notification);
 
-        // TODO: CLEANING OLD NOTIFICATIONS
+        trimOldNotifications(recipientUserId);
     }
 
     private boolean shouldRecycle(NotificationType type) {
@@ -102,6 +104,18 @@ public class NotificationService {
             case REACTION_POST, REACTION_COMMENT, NEW_FOLLOWER -> true;
             default -> false;
         };
+    }
+
+    private void trimOldNotifications(Long userId) {
+        List<Long> idsToDelete = notificationRepository.findOldNotificationIdsToTrim(userId, MAX_NOTIFICATIONS_PER_USER);
+
+        if (!idsToDelete.isEmpty()) {
+            notificationRepository.deleteContextsByNotificationIds(idsToDelete);
+
+            notificationRepository.deleteNotificationsByIds(idsToDelete);
+
+            log.debug("Removed {} old notifications for userId: {}", idsToDelete.size(), userId);
+        }
     }
 
 
@@ -172,12 +186,5 @@ public class NotificationService {
         }
 
         notification.setRead(true);
-    }
-
-    private boolean isUserToUserNotification(NotificationType type) {
-        return switch (type) {
-            case NEW_FOLLOWER, FRIEND_REQUEST, FRIEND_ACCEPT -> true;
-            default -> false;
-        };
     }
 }

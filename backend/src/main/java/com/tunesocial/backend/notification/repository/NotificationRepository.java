@@ -12,6 +12,8 @@ import com.tunesocial.backend.notification.model.enums.NotificationTargetType;
 import com.tunesocial.backend.notification.model.enums.NotificationType;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -36,8 +38,15 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     void markAllAsReadForUser(@Param("userId") Long userId);
 
 
+    @Query(value = "SELECT n.id FROM Notification n WHERE n.userId = :userId " +
+            "ORDER BY n.createdAt DESC OFFSET :maxToKeep", nativeQuery = false)
+    List<Long> findOldNotificationIdsToTrim(@Param("userId") Long userId, @Param("maxToKeep") int maxToKeep);
+
     @Modifying
-    @Query("DELETE FROM Notification n WHERE n.userId = :userId AND n.id NOT IN " +
-            "(SELECT n2.id FROM Notification n2 WHERE n2.userId = :userId ORDER BY n2.createdAt DESC LIMIT :maxToKeep)")
-    void trimOldNotificationsForUser(@Param("userId") Long userId, @Param("maxToKeep") int maxToKeep);
+    @Query("DELETE FROM Notification n WHERE n.id IN :ids")
+    void deleteNotificationsByIds(@Param("ids") Collection<Long> ids);
+
+    @Modifying
+    @Query("DELETE FROM NotificationContextData c WHERE c.notification.id IN :ids")
+    void deleteContextsByNotificationIds(@Param("ids") Collection<Long> ids);
 }

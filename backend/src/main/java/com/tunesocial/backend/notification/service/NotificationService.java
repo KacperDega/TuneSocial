@@ -3,6 +3,8 @@ package com.tunesocial.backend.notification.service;
 import com.tunesocial.backend.common.dto.PagedResponse;
 import com.tunesocial.backend.notification.dto.NotificationContext;
 import com.tunesocial.backend.notification.dto.NotificationResponse;
+import com.tunesocial.backend.notification.exception.NotificationAccessDeniedException;
+import com.tunesocial.backend.notification.exception.NotificationNotFoundException;
 import com.tunesocial.backend.notification.model.Notification;
 import com.tunesocial.backend.notification.model.NotificationContextData;
 import com.tunesocial.backend.notification.model.enums.NotificationTargetType;
@@ -163,10 +165,10 @@ public class NotificationService {
     @Transactional
     public void markAsRead(Long notificationId, Long userId) {
         Notification notification = notificationRepository.findById(notificationId)
-                .orElseThrow(() -> new RuntimeException("Notification not found")); //  TODO: EXCEPTION
+                .orElseThrow(() -> new NotificationNotFoundException(notificationId));
 
         if (!notification.getUserId().equals(userId)) {
-            throw new RuntimeException("Cannot access this notification"); //  TODO: EXCEPTION
+            throw new NotificationAccessDeniedException(notificationId);
         }
 
         notification.setRead(true);

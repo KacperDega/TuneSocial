@@ -46,7 +46,6 @@ public class NotificationService {
             NotificationTargetType targetType,
             // context fields
             String targetId,
-            String title,
             String imageUrl,
             String textSnippet,
             String actionUrl
@@ -68,6 +67,7 @@ public class NotificationService {
                 if (notification.getContext() != null) {
                     notification.getContext().setTextSnippet(textSnippet);
                     notification.getContext().setImageUrl(imageUrl);
+                    notification.getContext().setActionUrl(actionUrl);
                 }
 
                 notificationRepository.save(notification);
@@ -87,7 +87,6 @@ public class NotificationService {
         // new context
         NotificationContextData contextData = new NotificationContextData();
         contextData.setNotification(notification);
-        contextData.setTitle(title);
         contextData.setImageUrl(imageUrl);
         contextData.setTextSnippet(textSnippet);
         contextData.setActionUrl(actionUrl);
@@ -159,7 +158,6 @@ public class NotificationService {
                 actor.username(),
                 actor.displayName(),
                 actor.avatarId(),
-                context != null ? context.getTitle() : null,
                 context != null ? context.getImageUrl() : null,
                 context != null ? context.getTextSnippet() : null,
                 context != null ? context.getActionUrl() : null

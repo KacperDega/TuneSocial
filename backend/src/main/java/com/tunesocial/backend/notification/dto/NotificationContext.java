@@ -8,7 +8,6 @@ public record NotificationContext(
         String actorDisplayName,
         Integer actorAvatarId,
 
-        String title,
         String imageUrl,
         String textSnippet,
 
@@ -20,13 +19,12 @@ public record NotificationContext(
                 user.username(),
                 user.displayName(),
                 user.avatarId(),
-                null, null, textSnippet, null
+                 null, textSnippet, null
         );
     }
 
     public static NotificationContext forSocial(
             UserRefDto actor,
-            String targetTitle,
             String targetImageUrl,
             String textSnippet
     ) {
@@ -35,17 +33,16 @@ public record NotificationContext(
                 actor.username(),
                 actor.displayName(),
                 actor.avatarId(),
-                targetTitle,
                 targetImageUrl,
                 textSnippet,
                 null
         );
     }
 
-    public static NotificationContext forSystem(String title, String textSnippet, String imageUrl, String actionUrl) {
+    public static NotificationContext forSystem(String textSnippet, String imageUrl, String actionUrl) {
         return new NotificationContext(
                 0L, "system", "System", null,
-                title, imageUrl, textSnippet, actionUrl
+                imageUrl, textSnippet, actionUrl
         );
     }
 }

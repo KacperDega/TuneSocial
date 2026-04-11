@@ -17,8 +17,6 @@ public class NotificationContextData {
     @JoinColumn(name = "notification_id")
     private Notification notification;
 
-    private String title;
-
     private String imageUrl;
 
     @Column(length = 255)

@@ -21,7 +21,6 @@ public class NotificationFacade {
             Long postAuthorId,
             Long actorId,
             Long postId,
-            String postTitle,
             String commentTextSnippet
     ) {
         notificationService.sendNotification(
@@ -30,7 +29,6 @@ public class NotificationFacade {
                 NotificationType.COMMENT_ON_POST,
                 NotificationTargetType.POST,
                 postId.toString(),
-                postTitle,
                 null,
                 truncSnippet(commentTextSnippet),
                 null
@@ -41,7 +39,6 @@ public class NotificationFacade {
             Long parentCommentAuthorId,
             Long actorId,
             Long commentId,
-            String contextTitle,
             String replyText
     ) {
         notificationService.sendNotification(
@@ -50,7 +47,6 @@ public class NotificationFacade {
                 NotificationType.REPLY_TO_COMMENT,
                 NotificationTargetType.COMMENT,
                 commentId.toString(),
-                contextTitle,
                 null,
                 truncSnippet(replyText),
                 null
@@ -65,7 +61,6 @@ public class NotificationFacade {
             Long actorId,
             ReactionTargetType targetType,
             String targetId,
-            String targetTitle,
             String targetImageUrl
     ) {
         NotificationType notificationType = (targetType == ReactionTargetType.POST)
@@ -82,7 +77,6 @@ public class NotificationFacade {
                 notificationType,
                 notificationTarget,
                 targetId,
-                targetTitle,
                 targetImageUrl,
                 null,
                 null
@@ -99,7 +93,6 @@ public class NotificationFacade {
                 NotificationType.NEW_FOLLOWER,
                 NotificationTargetType.USER_PROFILE,
                 actorId.toString(),
-                null,
                 followerAvatarId != null ? followerAvatarId.toString() : null,
                 null,
                 null
@@ -113,7 +106,6 @@ public class NotificationFacade {
                 NotificationType.FRIEND_REQUEST,
                 NotificationTargetType.USER_PROFILE,
                 actorId.toString(),
-                null,
                 requesterAvatarId != null ? requesterAvatarId.toString() : null,
                 null,
                 null
@@ -127,7 +119,6 @@ public class NotificationFacade {
                 NotificationType.FRIEND_ACCEPT,
                 NotificationTargetType.USER_PROFILE,
                 actorId.toString(),
-                null,
                 accepterAvatarId != null ? accepterAvatarId.toString() : null,
                 null,
                 null
@@ -139,7 +130,6 @@ public class NotificationFacade {
 
     public void notifySystemAnnouncement(
             Long recipientUserId,
-            String title,
             String imageUrl,
             String textSnippet,
             String actionUrl
@@ -150,7 +140,6 @@ public class NotificationFacade {
                 NotificationType.SYSTEM_ANNOUNCEMENT,
                 NotificationTargetType.SYSTEM,
                 null,
-                title,
                 imageUrl,
                 truncSnippet(textSnippet),
                 actionUrl
@@ -162,7 +151,6 @@ public class NotificationFacade {
             Long actorId,
             NotificationTargetType targetType,
             String targetId,
-            String title,
             String imageUrl,
             String textSnippet,
             String actionUrl
@@ -173,7 +161,6 @@ public class NotificationFacade {
                 NotificationType.OTHER,
                 targetType,
                 targetId,
-                title,
                 imageUrl,
                 truncSnippet(textSnippet),
                 actionUrl

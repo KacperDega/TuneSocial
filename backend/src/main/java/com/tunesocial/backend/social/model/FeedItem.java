@@ -8,9 +8,7 @@ import lombok.Setter;
 import java.time.Instant;
 
 @Entity
-@Table(name = "feed_items", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"userId", "type", "referenceId"} )
-})
+@Table(name = "feed_items")
 @Getter @Setter
 public class FeedItem {
 
@@ -22,8 +20,11 @@ public class FeedItem {
     @Column(nullable = false)
     private FeedItemType type;
 
-    @Column(nullable = false)
+    @Column()
     private String referenceId;
+
+    @Column(length = 2000)
+    private String content;
 
     @Column(nullable = false)
     private Long userId;

@@ -4,14 +4,17 @@ import com.tunesocial.backend.common.dto.PagedResponse;
 import com.tunesocial.backend.social.dto.CommentResponse;
 import com.tunesocial.backend.social.dto.CreateCommentRequest;
 import com.tunesocial.backend.social.dto.ReactionsSummary;
+import com.tunesocial.backend.social.event.CommentCreatedEvent;
 import com.tunesocial.backend.social.exception.InvalidParentCommentException;
 import com.tunesocial.backend.social.exception.SocialResourceNotFoundException;
+import com.tunesocial.backend.social.model.FeedItem;
 import com.tunesocial.backend.social.model.PostComment;
 import com.tunesocial.backend.social.model.enums.ReactionTargetType;
 import com.tunesocial.backend.social.repository.PostCommentRepository;
 import com.tunesocial.backend.user.dto.UserRefDto;
 import com.tunesocial.backend.user.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
@@ -30,6 +33,7 @@ public class CommentService {
     private final PostCommentRepository commentRepository;
     private final SocialService socialService;
     private final UserService userService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional(readOnly = true)
     public PagedResponse<CommentResponse> getCommentsForPost(Long postId, Pageable pageable, Long currentUserId) {
@@ -94,10 +98,11 @@ public class CommentService {
     @Transactional
     public CommentResponse addComment(Long userId, CreateCommentRequest request) {
         Long targetParentId = request.parentId();
+        PostComment parentComment = null;
 
-        // reply
+        // chekc if reply
         if (targetParentId != null) {
-            PostComment parentComment = commentRepository.findById(targetParentId)
+            parentComment = commentRepository.findById(targetParentId)
                     .orElseThrow(() -> new SocialResourceNotFoundException("Parent comment not found"));
 
             if (!parentComment.getPostId().equals(request.postId())) {
@@ -117,8 +122,15 @@ public class CommentService {
 
         PostComment saved = commentRepository.save(comment);
 
-        Map<Long, UserRefDto> userRefs = userService.getUserReferencesByIds(Set.of(userId));
+        eventPublisher.publishEvent(new CommentCreatedEvent(
+                saved.getId(),
+                saved.getPostId(),
+                userId,
+                parentComment != null ? parentComment.getUserId() : null,
+                saved.getContent()
+        ));
 
+        Map<Long, UserRefDto> userRefs = userService.getUserReferencesByIds(Set.of(userId));
         UserRefDto author = userRefs.getOrDefault(
                 userId,
                 new UserRefDto(userId, null, "User_" + userId, 1)

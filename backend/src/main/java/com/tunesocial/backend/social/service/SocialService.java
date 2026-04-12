@@ -1,6 +1,7 @@
 package com.tunesocial.backend.social.service;
 
 import com.tunesocial.backend.social.dto.ReactionsSummary;
+import com.tunesocial.backend.social.event.ReactionAddedEvent;
 import com.tunesocial.backend.social.model.FeedItem;
 import com.tunesocial.backend.social.model.Reaction;
 import com.tunesocial.backend.social.model.enums.FeedItemType;
@@ -10,6 +11,7 @@ import com.tunesocial.backend.social.repository.FeedItemRepository;
 import com.tunesocial.backend.social.repository.ReactionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +27,7 @@ import java.util.stream.Collectors;
 public class SocialService {
     private final FeedItemRepository feedItemRepository;
     private final ReactionRepository reactionRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public void createPost(FeedItemType type, String referenceId, Long userId) {
@@ -40,6 +43,8 @@ public class SocialService {
         Optional<Reaction> existing = reactionRepository
                 .findByUserIdAndTargetIdAndTargetType(userId, targetId, targetType);
 
+        boolean notify = false;
+
         if (existing.isPresent()) {
             Reaction reaction = existing.get();
             if (reaction.getType() == reactionType) {
@@ -49,6 +54,7 @@ public class SocialService {
                 // another - update
                 reaction.setType(reactionType);
                 reactionRepository.save(reaction);
+                notify = true;
             }
         } else {
             Reaction newReaction = new Reaction();
@@ -57,6 +63,15 @@ public class SocialService {
             newReaction.setTargetType(targetType);
             newReaction.setType(reactionType);
             reactionRepository.save(newReaction);
+            notify = true;
+        }
+
+        if (notify) {
+            eventPublisher.publishEvent(new ReactionAddedEvent(
+                    userId,
+                    targetType,
+                    targetId.toString()
+            ));
         }
     }
 

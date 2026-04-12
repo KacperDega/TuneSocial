@@ -61,7 +61,8 @@ public class NotificationFacade {
             Long actorId,
             ReactionTargetType targetType,
             String targetId,
-            String targetImageUrl
+            String targetImageUrl,
+            String textSnippet
     ) {
         NotificationType notificationType = (targetType == ReactionTargetType.POST)
                 ? NotificationType.REACTION_POST

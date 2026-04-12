@@ -1,10 +1,10 @@
 package com.tunesocial.backend.notification.listener;
 
 import com.tunesocial.backend.notification.facade.NotificationFacade;
-import com.tunesocial.backend.social.event.CommentCreatedEvent;
-import com.tunesocial.backend.social.exception.SocialResourceNotFoundException;
-import com.tunesocial.backend.social.model.FeedItem;
-import com.tunesocial.backend.social.repository.FeedItemRepository;
+import com.tunesocial.backend.post.event.CommentCreatedEvent;
+import com.tunesocial.backend.post.exception.SocialResourceNotFoundException;
+import com.tunesocial.backend.post.model.FeedItem;
+import com.tunesocial.backend.post.repository.FeedItemRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;

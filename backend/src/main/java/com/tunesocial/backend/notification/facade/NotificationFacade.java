@@ -3,7 +3,7 @@ package com.tunesocial.backend.notification.facade;
 import com.tunesocial.backend.notification.model.enums.NotificationTargetType;
 import com.tunesocial.backend.notification.model.enums.NotificationType;
 import com.tunesocial.backend.notification.service.NotificationService;
-import com.tunesocial.backend.social.model.enums.ReactionTargetType;
+import com.tunesocial.backend.post.model.enums.ReactionTargetType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

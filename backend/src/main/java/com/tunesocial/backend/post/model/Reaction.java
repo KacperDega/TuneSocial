@@ -1,7 +1,7 @@
-package com.tunesocial.backend.social.model;
+package com.tunesocial.backend.post.model;
 
-import com.tunesocial.backend.social.model.enums.ReactionTargetType;
-import com.tunesocial.backend.social.model.enums.ReactionType;
+import com.tunesocial.backend.post.model.enums.ReactionTargetType;
+import com.tunesocial.backend.post.model.enums.ReactionType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

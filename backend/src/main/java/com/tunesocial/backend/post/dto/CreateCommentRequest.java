@@ -1,4 +1,4 @@
-package com.tunesocial.backend.social.dto;
+package com.tunesocial.backend.post.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

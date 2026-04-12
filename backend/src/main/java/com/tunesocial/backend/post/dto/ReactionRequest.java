@@ -1,7 +1,7 @@
-package com.tunesocial.backend.social.dto;
+package com.tunesocial.backend.post.dto;
 
-import com.tunesocial.backend.social.model.enums.ReactionTargetType;
-import com.tunesocial.backend.social.model.enums.ReactionType;
+import com.tunesocial.backend.post.model.enums.ReactionTargetType;
+import com.tunesocial.backend.post.model.enums.ReactionType;
 import jakarta.validation.constraints.NotNull;
 
 public record ReactionRequest(

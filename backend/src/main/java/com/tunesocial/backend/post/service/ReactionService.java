@@ -1,14 +1,11 @@
-package com.tunesocial.backend.social.service;
+package com.tunesocial.backend.post.service;
 
-import com.tunesocial.backend.social.dto.ReactionsSummary;
-import com.tunesocial.backend.social.event.ReactionAddedEvent;
-import com.tunesocial.backend.social.model.FeedItem;
-import com.tunesocial.backend.social.model.Reaction;
-import com.tunesocial.backend.social.model.enums.FeedItemType;
-import com.tunesocial.backend.social.model.enums.ReactionTargetType;
-import com.tunesocial.backend.social.model.enums.ReactionType;
-import com.tunesocial.backend.social.repository.FeedItemRepository;
-import com.tunesocial.backend.social.repository.ReactionRepository;
+import com.tunesocial.backend.post.dto.ReactionsSummary;
+import com.tunesocial.backend.post.event.ReactionAddedEvent;
+import com.tunesocial.backend.post.model.Reaction;
+import com.tunesocial.backend.post.model.enums.ReactionTargetType;
+import com.tunesocial.backend.post.model.enums.ReactionType;
+import com.tunesocial.backend.post.repository.ReactionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -24,19 +21,9 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class SocialService {
-    private final FeedItemRepository feedItemRepository;
+public class ReactionService {
     private final ReactionRepository reactionRepository;
     private final ApplicationEventPublisher eventPublisher;
-
-    @Transactional
-    public void createPost(FeedItemType type, String referenceId, Long userId) {
-        FeedItem item = new FeedItem();
-        item.setType(type);
-        item.setReferenceId(referenceId);
-        item.setUserId(userId);
-        feedItemRepository.save(item);
-    }
 
     @Transactional
     public void toggleReaction(Long userId, Long targetId, ReactionTargetType targetType, ReactionType reactionType) {

@@ -1,4 +1,4 @@
-package com.tunesocial.backend.social.model.enums;
+package com.tunesocial.backend.post.model.enums;
 
 public enum ReactionType {
     LIKE,

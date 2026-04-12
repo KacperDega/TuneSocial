@@ -1,6 +1,6 @@
-package com.tunesocial.backend.social.event;
+package com.tunesocial.backend.post.event;
 
-import com.tunesocial.backend.social.model.enums.ReactionTargetType;
+import com.tunesocial.backend.post.model.enums.ReactionTargetType;
 
 public record ReactionAddedEvent(
         Long actorId,

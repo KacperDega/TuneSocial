@@ -1,8 +1,8 @@
-package com.tunesocial.backend.social.repository;
+package com.tunesocial.backend.post.repository;
 
-import com.tunesocial.backend.social.model.Reaction;
-import com.tunesocial.backend.social.model.enums.ReactionTargetType;
-import com.tunesocial.backend.social.model.enums.ReactionType;
+import com.tunesocial.backend.post.model.Reaction;
+import com.tunesocial.backend.post.model.enums.ReactionTargetType;
+import com.tunesocial.backend.post.model.enums.ReactionType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

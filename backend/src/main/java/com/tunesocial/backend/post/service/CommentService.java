@@ -1,16 +1,15 @@
-package com.tunesocial.backend.social.service;
+package com.tunesocial.backend.post.service;
 
 import com.tunesocial.backend.common.dto.PagedResponse;
-import com.tunesocial.backend.social.dto.CommentResponse;
-import com.tunesocial.backend.social.dto.CreateCommentRequest;
-import com.tunesocial.backend.social.dto.ReactionsSummary;
-import com.tunesocial.backend.social.event.CommentCreatedEvent;
-import com.tunesocial.backend.social.exception.InvalidParentCommentException;
-import com.tunesocial.backend.social.exception.SocialResourceNotFoundException;
-import com.tunesocial.backend.social.model.FeedItem;
-import com.tunesocial.backend.social.model.PostComment;
-import com.tunesocial.backend.social.model.enums.ReactionTargetType;
-import com.tunesocial.backend.social.repository.PostCommentRepository;
+import com.tunesocial.backend.post.dto.CommentResponse;
+import com.tunesocial.backend.post.dto.CreateCommentRequest;
+import com.tunesocial.backend.post.dto.ReactionsSummary;
+import com.tunesocial.backend.post.event.CommentCreatedEvent;
+import com.tunesocial.backend.post.exception.InvalidParentCommentException;
+import com.tunesocial.backend.post.exception.SocialResourceNotFoundException;
+import com.tunesocial.backend.post.model.PostComment;
+import com.tunesocial.backend.post.model.enums.ReactionTargetType;
+import com.tunesocial.backend.post.repository.PostCommentRepository;
 import com.tunesocial.backend.user.dto.UserRefDto;
 import com.tunesocial.backend.user.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +30,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CommentService {
     private final PostCommentRepository commentRepository;
-    private final SocialService socialService;
+    private final ReactionService reactionService;
     private final UserService userService;
     private final ApplicationEventPublisher eventPublisher;
 
@@ -44,7 +43,7 @@ public class CommentService {
         Map<Long, UserRefDto> userRefs = userService.getUserReferencesByIds(userIds);
 
         List<CommentResponse> responses = comments.stream().map(c -> {
-            ReactionsSummary reactions = socialService.getReactionSummary(c.getId(), ReactionTargetType.COMMENT, currentUserId);
+            ReactionsSummary reactions = reactionService.getReactionSummary(c.getId(), ReactionTargetType.COMMENT, currentUserId);
             long repliesCount = commentRepository.countByParentId(c.getId());
 
             UserRefDto author = userRefs.getOrDefault(
@@ -75,7 +74,7 @@ public class CommentService {
         Map<Long, UserRefDto> userRefs = userService.getUserReferencesByIds(userIds);
 
         return replies.stream().map(r -> {
-            ReactionsSummary reactions = socialService.getReactionSummary(r.getId(), ReactionTargetType.COMMENT, currentUserId);
+            ReactionsSummary reactions = reactionService.getReactionSummary(r.getId(), ReactionTargetType.COMMENT, currentUserId);
 
             UserRefDto author = userRefs.getOrDefault(
                     r.getUserId(),
@@ -168,7 +167,7 @@ public class CommentService {
             commentRepository.deleteAllByParentId(commentId);
         }
 
-        socialService.removeReactionsForTargets(ReactionTargetType.COMMENT, commentIdsToDelete);
+        reactionService.removeReactionsForTargets(ReactionTargetType.COMMENT, commentIdsToDelete);
 
         commentRepository.delete(comment);
     }

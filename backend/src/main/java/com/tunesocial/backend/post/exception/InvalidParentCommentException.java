@@ -1,4 +1,4 @@
-package com.tunesocial.backend.social.exception;
+package com.tunesocial.backend.post.exception;
 
 public class InvalidParentCommentException extends RuntimeException {
     public InvalidParentCommentException(String message) {

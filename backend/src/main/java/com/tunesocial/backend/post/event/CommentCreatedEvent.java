@@ -1,4 +1,4 @@
-package com.tunesocial.backend.social.event;
+package com.tunesocial.backend.post.event;
 
 public record CommentCreatedEvent(
         Long commentId,

@@ -1,9 +1,9 @@
-package com.tunesocial.backend.social.controller;
+package com.tunesocial.backend.post.controller;
 
 import com.tunesocial.backend.common.dto.PagedResponse;
-import com.tunesocial.backend.social.dto.CommentResponse;
-import com.tunesocial.backend.social.dto.CreateCommentRequest;
-import com.tunesocial.backend.social.service.CommentService;
+import com.tunesocial.backend.post.dto.CommentResponse;
+import com.tunesocial.backend.post.dto.CreateCommentRequest;
+import com.tunesocial.backend.post.service.CommentService;
 import com.tunesocial.backend.user.model.User;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

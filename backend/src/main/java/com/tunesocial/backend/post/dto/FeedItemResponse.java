@@ -1,6 +1,6 @@
-package com.tunesocial.backend.social.dto;
+package com.tunesocial.backend.post.dto;
 
-import com.tunesocial.backend.social.model.enums.FeedItemType;
+import com.tunesocial.backend.post.model.enums.FeedItemType;
 
 import java.time.Instant;
 

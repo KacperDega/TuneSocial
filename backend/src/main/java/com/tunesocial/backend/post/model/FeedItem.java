@@ -1,6 +1,6 @@
-package com.tunesocial.backend.social.model;
+package com.tunesocial.backend.post.model;
 
-import com.tunesocial.backend.social.model.enums.FeedItemType;
+import com.tunesocial.backend.post.model.enums.FeedItemType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

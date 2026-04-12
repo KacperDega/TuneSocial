@@ -1,4 +1,4 @@
-package com.tunesocial.backend.social.model;
+package com.tunesocial.backend.post.model;
 
 import jakarta.persistence.*;
 import lombok.Getter;

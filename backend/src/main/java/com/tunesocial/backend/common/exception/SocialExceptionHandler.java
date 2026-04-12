@@ -1,8 +1,8 @@
 package com.tunesocial.backend.common.exception;
 
 import com.tunesocial.backend.common.exception.dto.ApiError;
-import com.tunesocial.backend.social.exception.InvalidParentCommentException;
-import com.tunesocial.backend.social.exception.SocialResourceNotFoundException;
+import com.tunesocial.backend.post.exception.InvalidParentCommentException;
+import com.tunesocial.backend.post.exception.SocialResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;

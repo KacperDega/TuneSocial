@@ -1,9 +1,9 @@
-package com.tunesocial.backend.social.controller;
+package com.tunesocial.backend.post.controller;
 
-import com.tunesocial.backend.social.dto.ReactionRequest;
-import com.tunesocial.backend.social.dto.ReactionsSummary;
-import com.tunesocial.backend.social.model.enums.ReactionTargetType;
-import com.tunesocial.backend.social.service.SocialService;
+import com.tunesocial.backend.post.dto.ReactionRequest;
+import com.tunesocial.backend.post.dto.ReactionsSummary;
+import com.tunesocial.backend.post.model.enums.ReactionTargetType;
+import com.tunesocial.backend.post.service.ReactionService;
 import com.tunesocial.backend.user.model.User;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -12,17 +12,17 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/social")
+@RequestMapping("/reaction")
 @RequiredArgsConstructor
-public class SocialController {
+public class ReactionController {
 
-    private final SocialService socialService;
+    private final ReactionService reactionService;
 
-    @PostMapping("/react")
+    @PostMapping("/toggle")
     public ResponseEntity<Void> react(@Valid @RequestBody ReactionRequest request,
                                       @AuthenticationPrincipal User user)
     {
-        socialService.toggleReaction(
+        reactionService.toggleReaction(
                 user.getId(),
                 request.targetId(),
                 request.targetType(),
@@ -31,12 +31,12 @@ public class SocialController {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/reactions/{targetType}/{targetId}")
+    @GetMapping("/{targetType}/{targetId}")
     public ResponseEntity<ReactionsSummary> getReactionStats(
             @PathVariable ReactionTargetType targetType,
             @PathVariable Long targetId,
             @AuthenticationPrincipal User user)
     {
-        return ResponseEntity.ok(socialService.getReactionSummary(targetId, targetType, user.getId()));
+        return ResponseEntity.ok(reactionService.getReactionSummary(targetId, targetType, user.getId()));
     }
 }

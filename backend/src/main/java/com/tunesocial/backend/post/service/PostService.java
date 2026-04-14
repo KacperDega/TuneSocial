@@ -1,6 +1,7 @@
 package com.tunesocial.backend.post.service;
 
 import com.tunesocial.backend.post.model.FeedItem;
+import com.tunesocial.backend.post.model.FeedItemContext;
 import com.tunesocial.backend.post.model.enums.FeedItemType;
 import com.tunesocial.backend.post.repository.FeedItemRepository;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class PostService {
 
     private final FeedItemRepository feedItemRepository;
+    private final FeedItemContextResolver feedItemContextResolver;
 
     @Transactional
     public void createPost(FeedItemType type, String referenceId, Long userId) {
@@ -19,6 +21,11 @@ public class PostService {
         item.setType(type);
         item.setReferenceId(referenceId);
         item.setUserId(userId);
+
+        FeedItemContext context = feedItemContextResolver.createContext(type, referenceId);
+        item.setContext(context);
+
         feedItemRepository.save(item);
     }
+
 }

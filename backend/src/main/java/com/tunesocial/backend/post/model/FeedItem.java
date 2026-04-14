@@ -23,6 +23,9 @@ public class FeedItem {
     @Column()
     private String referenceId;
 
+    @Embedded
+    private FeedItemContext context;
+
     @Column(length = 2000)
     private String content;
 

@@ -85,6 +85,11 @@ public class RatingService {
     }
 
     @Transactional(readOnly = true)
+    public Optional<Rating> getRatingById(Long ratingId) {
+        return ratingRepository.findById(ratingId);
+    }
+
+    @Transactional(readOnly = true)
     public RatingSummary getSummaryForTarget(String targetId, RatingTargetType type) {
 
         return summaryRepository

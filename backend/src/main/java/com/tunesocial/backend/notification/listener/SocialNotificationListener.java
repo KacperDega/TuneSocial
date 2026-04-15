@@ -31,29 +31,32 @@ public class SocialNotificationListener {
             if (event.targetType() == ReactionTargetType.POST) {
                 Long postId = Long.parseLong(event.targetId());
                 FeedItem post = feedItemRepository.findById(postId)
-                        .orElseThrow(() -> new SocialResourceNotFoundException("Post not found for notification"));
+                        .orElseThrow(() -> new SocialResourceNotFoundException("Post not found for notification, postId: " + postId));
 
-                String snippet = post.getContent() != null ? post.getContent() : null;
+                String snippet = post.getContent();
 
                 notificationFacade.notifyOnReaction(
                         post.getUserId(),
                         event.actorId(),
                         ReactionTargetType.POST,
                         event.targetId(),
-                        null, //post.getImageUrl(),
+                        post.getContext().getImageUrl(),
                         snippet
                 );
             } else if (event.targetType() == ReactionTargetType.COMMENT) {
                 Long commentId = Long.parseLong(event.targetId());
                 PostComment comment = commentRepository.findById(commentId)
-                        .orElseThrow(() -> new SocialResourceNotFoundException("Comment not found for notification"));
+                        .orElseThrow(() -> new SocialResourceNotFoundException("Comment not found for notification,  commentId: " + commentId));
+
+                FeedItem post = feedItemRepository.findById(comment.getPostId())
+                        .orElseThrow(() -> new SocialResourceNotFoundException("Post not found for notification,  postId: " + commentId));
 
                 notificationFacade.notifyOnReaction(
                         comment.getUserId(),
                         event.actorId(),
                         ReactionTargetType.COMMENT,
                         event.targetId(),
-                        null,
+                        post.getContext().getImageUrl(),
                         comment.getContent()
                 );
             }

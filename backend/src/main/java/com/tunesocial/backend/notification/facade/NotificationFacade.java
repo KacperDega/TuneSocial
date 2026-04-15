@@ -79,7 +79,7 @@ public class NotificationFacade {
                 notificationTarget,
                 targetId,
                 targetImageUrl,
-                null,
+                truncSnippet(textSnippet),
                 null
         );
     }

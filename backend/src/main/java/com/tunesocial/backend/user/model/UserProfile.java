@@ -46,6 +46,9 @@ public class UserProfile {
     private boolean isSetup = false;
 
     @Column(nullable = false)
+    private boolean allowFriendRequests = true;
+
+    @Column(nullable = false)
     private Instant updatedAt;
 
     @Column(nullable = false)

@@ -13,11 +13,12 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-public class RelationService {
+public class FriendService {
 
     private final FriendRequestRepository friendRequestRepository;
     private final FriendRelationRepository friendRelationRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final FollowService followService;
 
     // TODO: EXCEPTION
     @Transactional
@@ -60,7 +61,8 @@ public class RelationService {
         FriendRelation friendship = new FriendRelation(request.getRequesterId(), request.getRecipientId());
         friendRelationRepository.save(friendship);
 
-        // TODO: FOLLOW EACH OTHER
+        followService.ensureFollow(request.getRequesterId(), request.getRecipientId());
+        followService.ensureFollow(request.getRecipientId(), request.getRequesterId());
 
         friendRequestRepository.delete(request);
 

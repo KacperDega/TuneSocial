@@ -1,15 +1,22 @@
 package com.tunesocial.backend.relation.service;
 
+import com.tunesocial.backend.relation.dto.FriendRequestDto;
+import com.tunesocial.backend.relation.mapper.FriendRequestMapper;
 import com.tunesocial.backend.relation.model.FriendRelation;
 import com.tunesocial.backend.relation.model.FriendRequest;
 import com.tunesocial.backend.relation.repository.FriendRelationRepository;
 import com.tunesocial.backend.relation.repository.FriendRequestRepository;
+import com.tunesocial.backend.user.dto.UserRefDto;
+import com.tunesocial.backend.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -19,6 +26,37 @@ public class FriendService {
     private final FriendRelationRepository friendRelationRepository;
     private final ApplicationEventPublisher eventPublisher;
     private final FollowService followService;
+    private final UserService userService;
+    private final FriendRequestMapper friendRequestMapper;
+
+    @Transactional(readOnly = true)
+    public List<FriendRequestDto> getFriendRequests(Long recipientId) {
+        List<FriendRequest> requests = friendRequestRepository.findByRecipientId(recipientId);
+        if (requests.isEmpty()) {return new ArrayList<>();}
+
+        Set<Long> requesterIds = requests.stream().map(FriendRequest::getRequesterId).collect(Collectors.toSet());
+
+        Map<Long, UserRefDto> requestersDetails = userService.getUserReferencesByIds(requesterIds);
+
+        return friendRequestMapper.toDtoList(requests, requestersDetails);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<UserRefDto> getUserFriends(Long userId, Pageable pageable) {
+        Page<Long> friendIdsPage = friendRelationRepository.findAllFriendIdsByUserId(userId, pageable);
+
+        if (friendIdsPage.isEmpty()) {
+            return Page.empty(pageable);
+        }
+
+        Set<Long> friendIds = new HashSet<>(friendIdsPage.getContent());
+        Map<Long, UserRefDto> userRefs = userService.getUserReferencesByIds(friendIds);
+
+        return friendIdsPage.map(id -> userRefs.getOrDefault(
+                id,
+                new UserRefDto(id, null, "User_" + id, 1)
+        ));
+    }
 
     // TODO: EXCEPTION
     @Transactional

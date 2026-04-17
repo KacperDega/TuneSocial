@@ -1,6 +1,8 @@
 package com.tunesocial.backend.relation.repository;
 
 import com.tunesocial.backend.relation.model.FriendRelation;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,8 +15,9 @@ public interface FriendRelationRepository extends JpaRepository<FriendRelation,L
     @Query("SELECT CASE " +
                 "WHEN fr.userId1 = :userId THEN fr.userId2 " +
                 "ELSE fr.userId1 END " +
-            "FROM FriendRelation fr WHERE fr.userId1 = :userId OR fr.userId2 = :userId")
-    List<Long> findAllFriendIdsByUserId(@Param("userId") Long userId);
+            "FROM FriendRelation fr WHERE fr.userId1 = :userId OR fr.userId2 = :userId " +
+            "ORDER BY fr.createdAt DESC")
+    Page<Long> findAllFriendIdsByUserId(@Param("userId") Long userId, Pageable pageable);
 
     @Query("SELECT COUNT(fr) FROM FriendRelation fr WHERE fr.userId1 = :userId OR fr.userId2 = :userId")
     Integer countByUserId(Long userId);

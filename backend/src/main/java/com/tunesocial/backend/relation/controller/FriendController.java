@@ -12,7 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 
 @RestController
 @RequestMapping("/friends")
@@ -22,9 +21,10 @@ public class FriendController {
     private final FriendService friendService;
 
     @GetMapping("/requests")
-    public ResponseEntity<List<FriendRequestDto>> getFriendRequests(
-            @AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(friendService.getFriendRequests(user.getId()));
+    public ResponseEntity<Page<FriendRequestDto>> getFriendRequests(
+            @AuthenticationPrincipal User user,
+            @PageableDefault(size = 20) Pageable pageable) {
+        return ResponseEntity.ok(friendService.getFriendRequests(user.getId(), pageable));
     }
 
     @PostMapping("/requests/send/{recipientId}")

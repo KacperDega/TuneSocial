@@ -6,7 +6,6 @@ import com.tunesocial.backend.user.dto.UserRefDto;
 import org.mapstruct.*;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
 import java.util.Map;
 
 @Component
@@ -25,14 +24,5 @@ public class FriendRequestMapper {
                 request.getRecipientId(),
                 request.getCreatedAt()
         );
-    }
-
-    public List<FriendRequestDto> toDtoList(
-            List<FriendRequest> requests,
-            Map<Long, UserRefDto> requestersDetails
-    ) {
-        return requests.stream()
-                .map(request -> toFriendRequestDto(request, requestersDetails))
-                .toList();
     }
 }

@@ -30,15 +30,18 @@ public class FriendService {
     private final FriendRequestMapper friendRequestMapper;
 
     @Transactional(readOnly = true)
-    public List<FriendRequestDto> getFriendRequests(Long recipientId) {
-        List<FriendRequest> requests = friendRequestRepository.findByRecipientId(recipientId);
-        if (requests.isEmpty()) {return new ArrayList<>();}
+    public Page<FriendRequestDto> getFriendRequests(Long recipientId, Pageable pageable) {
+        Page<FriendRequest> requestsPage = friendRequestRepository.findByRecipientIdOrderByCreatedAtDesc(recipientId, pageable);
 
-        Set<Long> requesterIds = requests.stream().map(FriendRequest::getRequesterId).collect(Collectors.toSet());
+        if (requestsPage.isEmpty()) {
+            return Page.empty(pageable);
+        }
+
+        Set<Long> requesterIds = requestsPage.getContent().stream().map(FriendRequest::getRequesterId).collect(Collectors.toSet());
 
         Map<Long, UserRefDto> requestersDetails = userService.getUserReferencesByIds(requesterIds);
 
-        return friendRequestMapper.toDtoList(requests, requestersDetails);
+        return requestsPage.map(request -> friendRequestMapper.toFriendRequestDto(request,requestersDetails));
     }
 
     @Transactional(readOnly = true)

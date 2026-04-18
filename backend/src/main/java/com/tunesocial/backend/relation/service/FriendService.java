@@ -1,6 +1,10 @@
 package com.tunesocial.backend.relation.service;
 
 import com.tunesocial.backend.relation.dto.FriendRequestDto;
+import com.tunesocial.backend.relation.exception.AlreadyRelatedException;
+import com.tunesocial.backend.relation.exception.RelationNotFoundException;
+import com.tunesocial.backend.relation.exception.SelfRelationException;
+import com.tunesocial.backend.relation.exception.UnauthorizedRelationAccessException;
 import com.tunesocial.backend.relation.mapper.FriendRequestMapper;
 import com.tunesocial.backend.relation.model.FriendRelation;
 import com.tunesocial.backend.relation.model.FriendRequest;
@@ -9,6 +13,7 @@ import com.tunesocial.backend.relation.repository.FriendRequestRepository;
 import com.tunesocial.backend.user.dto.UserRefDto;
 import com.tunesocial.backend.user.service.UserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -20,6 +25,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class FriendService {
 
     private final FriendRequestRepository friendRequestRepository;
@@ -61,19 +67,18 @@ public class FriendService {
         ));
     }
 
-    // TODO: EXCEPTION
     @Transactional
     public void sendFriendRequest(Long requesterId, Long recipientId) {
         if (requesterId.equals(recipientId)) {
-            throw new RuntimeException("Cannot send friend request to yourself");
+            throw new SelfRelationException("Cannot send friend request to yourself");
         }
 
         if (friendRelationRepository.areFriends(requesterId, recipientId)) {
-            throw new RuntimeException("Users are already friends");
+            throw new AlreadyRelatedException("Users are already friends");
         }
 
         if (friendRequestRepository.existsByRequesterIdAndRecipientId(requesterId, recipientId)) {
-            throw new RuntimeException("Friend request already sent");
+            throw new AlreadyRelatedException("Friend request already sent");
         }
 
         Optional<FriendRequest> reverseRequest = friendRequestRepository.findByRequesterIdAndRecipientId(recipientId, requesterId);
@@ -88,15 +93,19 @@ public class FriendService {
         // eventPublisher.publishEvent(new FriendRequestSentEvent(requesterId, recipientId));
     }
 
-    // TODO: EXCEPTION
     @Transactional
     public void acceptFriendRequest(Long currentUserId, Long requestId) {
         FriendRequest request = friendRequestRepository.findById(requestId)
-                .orElseThrow(() -> new RuntimeException("Friend request not found"));
+                .orElseThrow(() -> new RelationNotFoundException("Friend request not found with id: " + requestId));
 
         if (!request.getRecipientId().equals(currentUserId)) {
-            // TODO: REMOVE THE REQUEST
-            throw new RuntimeException("Not authorized to accept this friend request");
+            throw new UnauthorizedRelationAccessException("Not authorized to accept this friend request");
+        }
+
+        if (request.getRequesterId().equals(request.getRecipientId())) {
+            log.warn("Removing invalid self-referencing friend request with id: {}", requestId);
+            friendRequestRepository.delete(request);
+            return;
         }
 
         FriendRelation friendship = new FriendRelation(request.getRequesterId(), request.getRecipientId());
@@ -110,17 +119,16 @@ public class FriendService {
         // eventPublisher.publishEvent(new FriendRequestAcceptedEvent(currentUserId, request.getRequesterId()));
     }
 
-    // TODO: EXCEPTION
     @Transactional
     public void cancelOrRejectFriendRequest(Long currentUserId, Long requestId) {
         FriendRequest request = friendRequestRepository.findById(requestId)
-                .orElseThrow(() -> new RuntimeException("Friend request not found"));
+                .orElseThrow(() -> new RelationNotFoundException("Friend request not found with id: " + requestId));
 
         boolean isRecipient = request.getRecipientId().equals(currentUserId);
         boolean isRequester = request.getRequesterId().equals(currentUserId);
 
         if (!isRecipient && !isRequester) {
-            throw new RuntimeException("Not authorized to modify this friend request");
+            throw new UnauthorizedRelationAccessException("Not authorized to modify this friend request");
         }
 
         friendRequestRepository.delete(request);

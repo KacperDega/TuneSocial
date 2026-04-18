@@ -1,5 +1,7 @@
 package com.tunesocial.backend.relation.service;
 
+import com.tunesocial.backend.relation.exception.AlreadyRelatedException;
+import com.tunesocial.backend.relation.exception.SelfRelationException;
 import com.tunesocial.backend.relation.model.FollowRelation;
 import com.tunesocial.backend.relation.repository.FollowRelationRepository;
 import lombok.RequiredArgsConstructor;
@@ -14,15 +16,14 @@ public class FollowService {
     private final FollowRelationRepository followRelationRepository;
     private final ApplicationEventPublisher eventPublisher;
 
-    // TODO: EXCEPTION
     @Transactional
     public void followUser(Long followerId, Long followingId) {
         if (followerId.equals(followingId)) {
-            throw new RuntimeException("Cannot follow yourself");
+            throw new SelfRelationException("Cannot follow yourself");
         }
 
         if (followRelationRepository.existsByFollowerIdAndFollowingId(followerId, followingId)) {
-            return;
+            throw new AlreadyRelatedException("User is already followed");
         }
 
         FollowRelation follow = new FollowRelation(followerId, followingId);
@@ -37,11 +38,10 @@ public class FollowService {
                 .ifPresent(followRelationRepository::delete);
     }
 
-    // TODO: EXCEPTION
     @Transactional
     public void ensureFollow(Long followerId, Long followingId) {
         if (followerId.equals(followingId)) {
-            throw new RuntimeException("Cannot follow yourself");
+            return;
         }
 
         if (!followRelationRepository.existsByFollowerIdAndFollowingId(followerId, followingId)) {

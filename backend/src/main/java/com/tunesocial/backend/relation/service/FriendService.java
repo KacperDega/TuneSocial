@@ -1,6 +1,8 @@
 package com.tunesocial.backend.relation.service;
 
 import com.tunesocial.backend.relation.dto.FriendRequestDto;
+import com.tunesocial.backend.relation.event.FriendRequestAcceptedEvent;
+import com.tunesocial.backend.relation.event.FriendRequestSentEvent;
 import com.tunesocial.backend.relation.exception.AlreadyRelatedException;
 import com.tunesocial.backend.relation.exception.RelationNotFoundException;
 import com.tunesocial.backend.relation.exception.SelfRelationException;
@@ -90,7 +92,7 @@ public class FriendService {
         FriendRequest request = new FriendRequest(requesterId, recipientId);
         friendRequestRepository.save(request);
 
-        // eventPublisher.publishEvent(new FriendRequestSentEvent(requesterId, recipientId));
+         eventPublisher.publishEvent(new FriendRequestSentEvent(requesterId, recipientId));
     }
 
     @Transactional
@@ -116,7 +118,7 @@ public class FriendService {
 
         friendRequestRepository.delete(request);
 
-        // eventPublisher.publishEvent(new FriendRequestAcceptedEvent(currentUserId, request.getRequesterId()));
+         eventPublisher.publishEvent(new FriendRequestAcceptedEvent(currentUserId, request.getRequesterId()));
     }
 
     @Transactional

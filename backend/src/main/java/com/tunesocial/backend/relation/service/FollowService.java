@@ -1,5 +1,6 @@
 package com.tunesocial.backend.relation.service;
 
+import com.tunesocial.backend.relation.event.UserFollowedEvent;
 import com.tunesocial.backend.relation.exception.AlreadyRelatedException;
 import com.tunesocial.backend.relation.exception.SelfRelationException;
 import com.tunesocial.backend.relation.model.FollowRelation;
@@ -29,7 +30,7 @@ public class FollowService {
         FollowRelation follow = new FollowRelation(followerId, followingId);
         followRelationRepository.save(follow);
 
-//        eventPublisher.publishEvent(new UserFollowedEvent(followerId, followingId));
+        eventPublisher.publishEvent(new UserFollowedEvent(followerId, followingId));
     }
 
     @Transactional

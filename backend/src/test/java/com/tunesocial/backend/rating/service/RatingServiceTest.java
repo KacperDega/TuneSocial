@@ -56,6 +56,7 @@ class RatingServiceTest {
     @InjectMocks
     private RatingService ratingService;
 
+
     private final Long USER_ID = 1L;
     private final String TRACK_ID = "tr-1";
     private final String ALBUM_ID = "al-1";
@@ -112,6 +113,36 @@ class RatingServiceTest {
             assertThat(existing.getRatingValue()).isEqualTo(newValue);
             verify(summaryRepository).updateSummary(TRACK_ID, TYPE, 0, newValue - 5);
         }
+
+        @Test
+        @DisplayName("Should keep existing comment when updated with identical comment")
+        void shouldKeepExistingComment_whenCommentHasNotChanged() {
+            // Given
+            String existingComment = "Same comment";
+
+            Rating existing = new Rating();
+            existing.setRatingValue(5);
+            existing.setComment(existingComment);
+            existing.setTargetId(TRACK_ID);
+            existing.setTargetType(TYPE);
+
+            RateRequest request = new RateRequest(TRACK_ID, TYPE, 4, "Same comment");
+
+            when(ratingRepository.findByUserIdAndTargetIdAndTargetType(USER_ID, TRACK_ID, TYPE))
+                    .thenReturn(Optional.of(existing));
+
+            when(summaryRepository.findByTargetIdAndTargetType(TRACK_ID, TYPE))
+                    .thenReturn(Optional.of(new RatingSummary()));
+
+            // When
+            ratingService.rate(USER_ID, request);
+
+            // Then
+            assertThat(existing.getComment()).isEqualTo(existingComment);
+            assertThat(existing.getRatingValue()).isEqualTo(4);
+            verify(ratingRepository).save(existing);
+        }
+
 
         @Test
         @DisplayName("Should create summary when it does not exist")
